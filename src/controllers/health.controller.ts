@@ -41,7 +41,7 @@ export class HealthController {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.NPM_PACKAGE_VERSION || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
     };
   }
