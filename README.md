@@ -5,6 +5,7 @@ NestJS-based REST API and WebSocket server for the AI Mafia Game with TypeORM, M
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 20+
 - MySQL 8.0+
 - Redis 6.0+
@@ -13,44 +14,50 @@ NestJS-based REST API and WebSocket server for the AI Mafia Game with TypeORM, M
 ### Installation & Setup
 
 1. **Install Dependencies**:
+
    ```bash
    npm install
    ```
 
 2. **Environment Configuration**:
+
    ```bash
    cp .env.example .env
    # Edit .env with your database and Redis credentials
    ```
 
 3. **Database Setup**:
+
    ```bash
    # Create MySQL database
    mysql -u root -p
    CREATE DATABASE mafia_game;
-   
+
    # The application will auto-create tables on first run
    ```
 
 4. **Start Development Server**:
+
    ```bash
    npm run start:dev
    ```
 
 5. **Access Services**:
-   - **API Server**: http://localhost:3001
-   - **Swagger API Docs**: http://localhost:3001/api/docs
-   - **WebSocket Server**: ws://localhost:3001
+   - **API Server**: http://localhost:3000
+   - **Swagger API Docs**: http://localhost:3000/api/docs
+   - **WebSocket Server**: ws://localhost:3000
 
 ## 🏗️ Architecture
 
 ### Layered Architecture
+
 - **Entity Layer**: TypeORM entities with embedded business logic
 - **Service Layer**: Business logic and game rules
 - **Controller Layer**: REST API endpoints with DTO validation
 - **Gateway Layer**: Socket.IO real-time communication
 
 ### Key Technologies
+
 - **Framework**: NestJS v11 with Fastify adapter
 - **Database**: MySQL with TypeORM
 - **WebSocket**: Socket.IO with Redis adapter
@@ -61,6 +68,7 @@ NestJS-based REST API and WebSocket server for the AI Mafia Game with TypeORM, M
 ## 📚 Development
 
 ### Available Scripts
+
 ```bash
 npm run start:dev           # Development with watch mode
 npm run start:debug         # Development with debugging
@@ -75,10 +83,12 @@ npm run format              # Format code with Prettier
 ```
 
 ### Environment Variables
+
 See `.env.example` for all available configuration options.
 
 ### API Documentation
-Visit http://localhost:3001/api/docs for interactive Swagger documentation.
+
+Visit http://localhost:3000/api/docs for interactive Swagger documentation.
 
 ## 🔧 Advanced TypeScript Features
 
@@ -111,11 +121,13 @@ npm run test:e2e
 ## 🚢 Production Deployment
 
 1. **Build the application**:
+
    ```bash
    npm run build
    ```
 
 2. **Set production environment**:
+
    ```bash
    export NODE_ENV=production
    ```
@@ -128,7 +140,7 @@ npm run test:e2e
 ## 📖 Documentation
 
 - [CLAUDE.md](./CLAUDE.md) - Comprehensive development guide with advanced TypeScript patterns
-- [Swagger API Docs](http://localhost:3001/api/docs) - Interactive API documentation
+- [Swagger API Docs](http://localhost:3000/api/docs) - Interactive API documentation
 
 ## 🤝 Contributing
 
