@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { GameService } from './services/game.service';
 import { EventLogsProcessor } from './services/event-logs.processor';
-import { GameController, HealthController } from './controllers';
 import { GameGateway } from './gateways/game.gateway';
 import { DomainExceptionFilter } from './common/filters/domain-exception.filter';
 import { RedisService } from './common/redis.service';
@@ -12,6 +11,8 @@ import { Game } from './entities/game.entity';
 import { GameEvent } from './entities/game-event.entity';
 import { Message } from './entities/message.entity';
 import { Player } from './entities/player.entity';
+import { GameController } from './controllers/game.controller';
+import { HealthController } from './controllers/health.controller';
 
 @Module({
   imports: [
