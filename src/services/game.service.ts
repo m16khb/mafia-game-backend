@@ -7,7 +7,7 @@ import {
   NotFoundError,
   ValidationError,
   ConflictError,
-} from '../common/errors';
+} from '@/common/errors/domain-error';
 import { Game } from '@/entities/game.entity';
 import { Message } from '@/entities/message.entity';
 import { Player } from '@/entities/player.entity';

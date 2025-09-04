@@ -4,13 +4,13 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-} from "@nestjs/common";
+} from '@nestjs/common';
 import {
   DomainError,
   NotFoundError,
   ValidationError,
   ConflictError,
-} from "../errors";
+} from '@/common/errors/domain-error';
 
 @Catch()
 export class DomainExceptionFilter implements ExceptionFilter {
@@ -20,13 +20,20 @@ export class DomainExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof DomainError) {
       const status = this.mapDomainErrorToStatus(exception);
-      response.status(status).send({
+      const responseBody: { [key: string]: any } = {
         error: exception.name,
         message: exception.message,
         code: exception.code,
-        details:
-          "details" in exception ? (exception as any).details : undefined,
-      });
+      };
+
+      if (
+        exception instanceof NotFoundError ||
+        exception instanceof ValidationError
+      ) {
+        responseBody.details = exception.details;
+      }
+
+      response.status(status).send(responseBody);
       return;
     }
 
@@ -40,8 +47,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
     }
 
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-      error: "InternalServerError",
-      message: "An unexpected error occurred",
+      error: 'InternalServerError',
+      message: 'An unexpected error occurred',
     });
   }
 

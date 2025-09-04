@@ -6,15 +6,14 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
-} from "@nestjs/websockets";
-import { Server, Socket } from "socket.io";
-import { Logger } from "@nestjs/common";
-import { GameService } from "../services/game.service";
-import { GameResponseDto } from "../common/dtos";
-
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { Logger } from '@nestjs/common';
+import { GameService } from '../services/game.service';
+import { GameResponseDto } from '@/common/dtos/response.dtos';
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
 })
@@ -35,7 +34,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Handle player removal logic here
   }
 
-  @SubscribeMessage("join-game")
+  @SubscribeMessage('join-game')
   async handleJoinGame(
     @MessageBody() data: { gameId: number; playerName: string },
     @ConnectedSocket() client: Socket,
@@ -52,7 +51,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Notify all players in the game
       const gameResponse = GameResponseDto.fromEntity(game);
-      this.server.to(data.gameId.toString()).emit("game-state", gameResponse);
+      this.server.to(data.gameId.toString()).emit('game-state', gameResponse);
 
       return { success: true, game: gameResponse };
     } catch (error) {
@@ -61,7 +60,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage("leave-game")
+  @SubscribeMessage('leave-game')
   async handleLeaveGame(
     @MessageBody() data: { gameId: number },
     @ConnectedSocket() client: Socket,
@@ -75,7 +74,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (game) {
         // Notify remaining players
         const gameResponse = GameResponseDto.fromEntity(game);
-        this.server.to(data.gameId.toString()).emit("game-state", gameResponse);
+        this.server.to(data.gameId.toString()).emit('game-state', gameResponse);
       }
 
       return { success: true };
@@ -85,7 +84,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage("send-message")
+  @SubscribeMessage('send-message')
   async handleSendMessage(
     @MessageBody()
     data: {
@@ -102,11 +101,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.senderId,
         data.senderName,
         data.content,
-        "chat",
+        'chat',
       );
 
       // Broadcast message to all players in the game
-      this.server.to(data.gameId.toString()).emit("new-message", {
+      this.server.to(data.gameId.toString()).emit('new-message', {
         id: message.id,
         content: message.content,
         senderName: message.senderName,
@@ -122,7 +121,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage("start-game")
+  @SubscribeMessage('start-game')
   async handleStartGame(
     @MessageBody() data: { gameId: number },
     @ConnectedSocket() _client: Socket,
@@ -132,8 +131,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Notify all players
       const gameResponse = GameResponseDto.fromEntity(game);
-      this.server.to(data.gameId.toString()).emit("game-started", gameResponse);
-      this.server.to(data.gameId.toString()).emit("game-state", gameResponse);
+      this.server.to(data.gameId.toString()).emit('game-started', gameResponse);
+      this.server.to(data.gameId.toString()).emit('game-state', gameResponse);
 
       return { success: true, game: gameResponse };
     } catch (error) {
@@ -142,7 +141,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage("player-ready")
+  @SubscribeMessage('player-ready')
   async handlePlayerReady(
     @MessageBody() data: { gameId: number; playerId: number; isReady: boolean },
     @ConnectedSocket() _client: Socket,
@@ -156,7 +155,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Notify all players
       const gameResponse = GameResponseDto.fromEntity(game);
-      this.server.to(data.gameId.toString()).emit("game-state", gameResponse);
+      this.server.to(data.gameId.toString()).emit('game-state', gameResponse);
 
       return { success: true };
     } catch (error) {
@@ -170,7 +169,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const game = await this.gameService.getGame(gameId);
       const gameResponse = GameResponseDto.fromEntity(game);
-      this.server.to(gameId.toString()).emit("game-state", gameResponse);
+      this.server.to(gameId.toString()).emit('game-state', gameResponse);
     } catch (error) {
       this.logger.error(`Failed to broadcast game state: ${error.message}`);
     }
