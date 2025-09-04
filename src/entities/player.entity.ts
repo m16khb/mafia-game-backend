@@ -5,55 +5,58 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-} from "typeorm";
-import { ApiProperty } from "@nestjs/swagger";
-import { Game, GameRole } from "./game.entity";
+  Relation,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { Game, GameRole } from './game.entity';
 
-@Entity("players")
+@Entity('players')
 export class Player {
-  @ApiProperty({ description: "플레이어 ID", example: 1 })
-  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  @ApiProperty({ description: '플레이어 ID', example: 1 })
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
   id: number;
 
-  @ApiProperty({ description: "플레이어 이름", example: "Player1" })
-  @Column({ type: "varchar", length: 50 })
+  @ApiProperty({ description: '플레이어 이름', example: 'Player1' })
+  @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @ApiProperty({ description: "소켓 ID", example: "socket_123" })
-  @Column({ type: "varchar", length: 100 })
+  @ApiProperty({ description: '소켓 ID', example: 'socket_123' })
+  @Column({ type: 'varchar', length: 100 })
   socketId: string;
 
-  @ApiProperty({ description: "생존 여부", example: true })
-  @Column({ type: "boolean", default: true })
+  @ApiProperty({ description: '생존 여부', example: true })
+  @Column({ type: 'boolean', default: true })
   isAlive: boolean;
 
-  @ApiProperty({ description: "준비 상태", example: false })
-  @Column({ type: "boolean", default: false })
+  @ApiProperty({ description: '준비 상태', example: false })
+  @Column({ type: 'boolean', default: false })
   isReady: boolean;
 
-  @ApiProperty({ description: "호스트 여부", example: false })
-  @Column({ type: "boolean", default: false })
+  @ApiProperty({ description: '호스트 여부', example: false })
+  @Column({ type: 'boolean', default: false })
   isHost: boolean;
 
   @ApiProperty({
-    description: "플레이어 역할",
-    enum: ["citizen", "mafia", "police", "doctor"],
+    description: '플레이어 역할',
+    enum: ['citizen', 'mafia', 'police', 'doctor'],
     required: false,
   })
   @Column({
-    type: "enum",
-    enum: ["citizen", "mafia", "police", "doctor"],
+    type: 'enum',
+    enum: ['citizen', 'mafia', 'police', 'doctor'],
     nullable: true,
   })
-  role?: GameRole;
+  role?: Relation<GameRole>;
 
-  @ApiProperty({ description: "게임 ID" })
-  @Column({ type: "int", unsigned: true })
+  @ApiProperty({ description: '게임 ID' })
+  @Column({ type: 'int', unsigned: true })
   gameId: number;
 
-  @ManyToOne(() => Game, (game) => game.players, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "gameId" })
-  game: Game;
+  @ManyToOne(() => Game, (game) => game.players, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'gameId' })
+  game: Relation<Game>;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -80,18 +83,18 @@ export class Player {
   }
 
   isMafia(): boolean {
-    return this.role === "mafia";
+    return this.role === 'mafia';
   }
 
   isPolice(): boolean {
-    return this.role === "police";
+    return this.role === 'police';
   }
 
   isDoctor(): boolean {
-    return this.role === "doctor";
+    return this.role === 'doctor';
   }
 
   isCitizen(): boolean {
-    return this.role === "citizen";
+    return this.role === 'citizen';
   }
 }

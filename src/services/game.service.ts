@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Game, Player, Message } from '../entities';
 import {
   NotFoundError,
   ValidationError,
   ConflictError,
 } from '../common/errors';
+import { Game } from '@/entities/game.entity';
+import { Message } from '@/entities/message.entity';
+import { Player } from '@/entities/player.entity';
 
 @Injectable()
 export class GameService {

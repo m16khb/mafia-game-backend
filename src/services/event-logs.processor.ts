@@ -1,9 +1,10 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job } from 'bullmq';
 import { GameEvent } from '../entities/game-event.entity';
+import { WrapperType } from '@/common/wrapper-type';
 
 interface EventLogJobData {
   gameId: number;
