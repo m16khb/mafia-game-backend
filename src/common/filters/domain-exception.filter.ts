@@ -20,13 +20,20 @@ export class DomainExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof DomainError) {
       const status = this.mapDomainErrorToStatus(exception);
-      response.status(status).send({
+      const responseBody: { [key: string]: any } = {
         error: exception.name,
         message: exception.message,
         code: exception.code,
-        details:
-          'details' in exception ? (exception as any).details : undefined,
-      });
+      };
+
+      if (
+        exception instanceof NotFoundError ||
+        exception instanceof ValidationError
+      ) {
+        responseBody.details = exception.details;
+      }
+
+      response.status(status).send(responseBody);
       return;
     }
 
