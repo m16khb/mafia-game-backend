@@ -25,7 +25,7 @@ export class GameRepository implements IGameRepository {
 
   async findByIdWithRelations(
     id: number,
-    relations: string[],
+    relations: { [key: string]: boolean },
   ): Promise<Game | null> {
     return this.repository.findOne({
       where: { id },

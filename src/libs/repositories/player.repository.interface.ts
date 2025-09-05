@@ -3,6 +3,8 @@ import { Player } from '../../entities/player.entity';
 export interface IPlayerRepository {
   create(playerData: Partial<Player>): Player;
   save(player: Player): Promise<Player>;
+  save(players: Player[]): Promise<Player[]>;
+  save(player: Player | Player[]): Promise<Player | Player[]>;
   findById(id: number): Promise<Player | null>;
   findByIdWithGame(id: number): Promise<Player | null>;
   findBySocketId(socketId: string): Promise<Player | null>;

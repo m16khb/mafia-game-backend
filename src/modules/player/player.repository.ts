@@ -15,8 +15,15 @@ export class PlayerRepository implements IPlayerRepository {
     return this.repository.create(playerData);
   }
 
-  async save(player: Player): Promise<Player> {
-    return this.repository.save(player);
+  async save(player: Player): Promise<Player>;
+  async save(players: Player[]): Promise<Player[]>;
+  async save(players: Player | Player[]): Promise<Player | Player[]> {
+    switch (Array.isArray(players)) {
+      case true:
+        return this.repository.save(players as Player[]);
+      case false:
+        return this.repository.save(players as Player);
+    }
   }
 
   async findById(id: number): Promise<Player | null> {
