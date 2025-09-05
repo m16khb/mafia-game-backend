@@ -12,7 +12,7 @@ import { MESSAGE_REPOSITORY_TOKEN } from "@libs/repositories";
     MessageRepository,
     {
       provide: MESSAGE_REPOSITORY_TOKEN,
-      useClass: MessageRepository,
+      useExisting: MessageRepository,
     },
   ],
   exports: [MessageService, MESSAGE_REPOSITORY_TOKEN],
