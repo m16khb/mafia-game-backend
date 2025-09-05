@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import {
@@ -16,9 +16,14 @@ import {
   PLAYER_REPOSITORY_TOKEN,
   MESSAGE_REPOSITORY_TOKEN,
 } from '@libs/repositories';
+import { LlmService } from '../llm/llm.service';
+import { AI_NAMES } from './ai-names.constants';
+import { Player } from '@/entities/player.entity';
+import { LLM_SERVICES } from '../llm/providers/llm.constants';
 
 @Injectable()
 export class GameService {
+  private readonly logger = new Logger(GameService.name);
   constructor(
     @Inject(GAME_REPOSITORY_TOKEN)
     private readonly gameRepository: IGameRepository,
@@ -28,6 +33,8 @@ export class GameService {
     private readonly messageRepository: IMessageRepository,
     @InjectQueue('event-logs')
     private readonly eventLogsQueue: Queue,
+    @Inject(LLM_SERVICES)
+    private readonly llmService: LlmService,
   ) {}
 
   async createGame(
@@ -58,7 +65,7 @@ export class GameService {
       gameId: savedGame.id,
       isHost: true,
       isAlive: true,
-      isReady: false,
+      isReady: true,
     });
 
     await this.playerRepository.save(host);
@@ -70,19 +77,55 @@ export class GameService {
     });
 
     // Reload game with players
-    const gameWithPlayers = await this.gameRepository.findByIdWithRelations(
+    const gameWithHuman = await this.gameRepository.findByIdWithRelations(
       savedGame.id,
-      ['players', 'messages'],
+      { players: true, messages: true },
     );
 
-    return { gameId: savedGame.id, game: gameWithPlayers };
+    // --- AI Player Creation ---
+    const aiPlayersToCreate = 5;
+    const availableAiNames = [...AI_NAMES];
+    const createdAiPlayers: Player[] = [];
+
+    for (let i = 0; i < aiPlayersToCreate; i++) {
+      const randomIndex = Math.floor(Math.random() * availableAiNames.length);
+      const aiName = availableAiNames.splice(randomIndex, 1)[0];
+
+      const aiPlayer = this.playerRepository.create({
+        name: aiName,
+        socketId: hostSocketId,
+        gameId: savedGame.id,
+        isHost: false,
+        isAlive: true,
+        isReady: true, // AI players are always ready
+        isAi: true,
+      });
+      createdAiPlayers.push(aiPlayer);
+    }
+
+    await this.playerRepository.save(createdAiPlayers);
+
+    for (const ai of createdAiPlayers) {
+      await this.addEventLogJob(savedGame.id, 'player-joined', {
+        playerName: ai.name,
+        isHost: false,
+        isAi: true,
+      });
+    }
+
+    const finalGame = await this.gameRepository.findByIdWithRelations(
+      savedGame.id,
+      { players: true, messages: true },
+    );
+
+    return { gameId: savedGame.id, game: finalGame };
   }
 
   async getGame(gameId: number, requestingPlayerId?: number): Promise<Game> {
-    const game = await this.gameRepository.findByIdWithRelations(gameId, [
-      'players',
-      'messages',
-    ]);
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+      messages: true,
+    });
 
     if (!game) {
       throw new NotFoundError('Game', { id: gameId });
@@ -117,9 +160,9 @@ export class GameService {
     playerName: string,
     socketId: string,
   ): Promise<Game> {
-    const game = await this.gameRepository.findByIdWithRelations(gameId, [
-      'players',
-    ]);
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
 
     if (!game) {
       throw new NotFoundError('Game', { id: gameId });
@@ -156,9 +199,9 @@ export class GameService {
   }
 
   async removePlayer(gameId: number, socketId: string): Promise<Game> {
-    const game = await this.gameRepository.findByIdWithRelations(gameId, [
-      'players',
-    ]);
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
 
     if (!game) {
       throw new NotFoundError('Game', { id: gameId });
@@ -199,9 +242,9 @@ export class GameService {
   }
 
   async startGame(gameId: number): Promise<Game> {
-    const game = await this.gameRepository.findByIdWithRelations(gameId, [
-      'players',
-    ]);
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
 
     if (!game) {
       throw new NotFoundError('Game', { id: gameId });
@@ -292,9 +335,9 @@ export class GameService {
   }
 
   async nextPhase(gameId: number): Promise<Game> {
-    const game = await this.gameRepository.findByIdWithRelations(gameId, [
-      'players',
-    ]);
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
 
     if (!game) {
       throw new NotFoundError('Game', { id: gameId });

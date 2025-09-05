@@ -12,6 +12,7 @@ import { MessageModule } from './modules/message/message.module';
 import { GameEventModule } from './modules/game-event/game-event.module';
 import { HealthModule } from './modules/health/health.module';
 import { RedisModule } from '@libs/redis/redis.module';
+import { LlmModule } from './modules/llm/llm.module';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { RedisModule } from '@libs/redis/redis.module';
         database: configService.get('DB_DATABASE'),
         entities: [Game, Player, Message, GameEvent],
         synchronize: configService.get('NODE_ENV') !== 'prod',
-        logging: configService.get('NODE_ENV') !== 'prod',
+        // logging: configService.get('NODE_ENV') !== 'prod',
       }),
       inject: [ConfigService],
     }),
@@ -50,6 +51,7 @@ import { RedisModule } from '@libs/redis/redis.module';
     GameEventModule,
     HealthModule,
     RedisModule,
+    LlmModule,
   ],
 })
 export class AppModule {}

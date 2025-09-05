@@ -12,6 +12,7 @@ import { GameRepository } from './game.repository';
 import { PlayerModule } from '../player/player.module';
 import { MessageModule } from '../message/message.module';
 import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
+import { LlmModule } from '../llm/llm.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
     }),
     PlayerModule,
     MessageModule,
+    LlmModule,
   ],
   controllers: [GameController],
   providers: [

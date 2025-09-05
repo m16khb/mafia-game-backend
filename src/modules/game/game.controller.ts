@@ -97,42 +97,6 @@ export class GameController {
     return GameResponseDto.fromEntity(game);
   }
 
-  @Post(':gameId/join')
-  @ApiOperation({
-    summary: '게임 참가',
-    description: '플레이어가 게임에 참가합니다.',
-  })
-  @ApiParam({
-    name: 'gameId',
-    description: '게임 ID',
-    example: 1,
-    type: 'number',
-  })
-  @ApiOkResponse({
-    description: '게임 참가 성공',
-    type: GameResponseDto,
-  })
-  @ApiBadRequestResponse({
-    description: '잘못된 요청 데이터',
-  })
-  @ApiNotFoundResponse({
-    description: '게임을 찾을 수 없음',
-  })
-  @ApiConflictResponse({
-    description: '게임 참가 불가 (인원 초과 또는 이미 참가됨)',
-  })
-  async joinGame(
-    @Param('gameId', ParseIntPipe) gameId: number,
-    @Body() joinGameDto: JoinGameRequestDto,
-  ): Promise<GameResponseDto> {
-    const game = await this.gameService.joinGame(
-      gameId,
-      joinGameDto.playerName,
-      joinGameDto.socketId,
-    );
-    return GameResponseDto.fromEntity(game);
-  }
-
   @Post(':gameId/start')
   @ApiOperation({
     summary: '게임 시작',
