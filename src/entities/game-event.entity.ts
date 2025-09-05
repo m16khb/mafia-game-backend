@@ -5,7 +5,6 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-  Relation,
 } from 'typeorm';
 import { Game } from './game.entity';
 
@@ -27,7 +26,7 @@ export class GameEvent {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'gameId' })
-  game: Relation<Game>;
+  game: Game;
 
   @CreateDateColumn()
   createdAt: Date;

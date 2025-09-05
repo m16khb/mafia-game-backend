@@ -2,17 +2,16 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { GameService } from './services/game.service';
-import { EventLogsProcessor } from './services/event-logs.processor';
-import { GameGateway } from './gateways/game.gateway';
-import { DomainExceptionFilter } from './common/filters/domain-exception.filter';
-import { RedisService } from './common/redis.service';
 import { Game } from './entities/game.entity';
 import { GameEvent } from './entities/game-event.entity';
 import { Message } from './entities/message.entity';
 import { Player } from './entities/player.entity';
-import { GameController } from './controllers/game.controller';
-import { HealthController } from './controllers/health.controller';
+import { GameModule } from './modules/game/game.module';
+import { PlayerModule } from './modules/player/player.module';
+import { MessageModule } from './modules/message/message.module';
+import { GameEventModule } from './modules/game-event/game-event.module';
+import { HealthModule } from './modules/health/health.module';
+import { RedisModule } from '@libs/redis/redis.module';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { HealthController } from './controllers/health.controller';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Game, Player, Message, GameEvent]),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -46,20 +44,12 @@ import { HealthController } from './controllers/health.controller';
       }),
       inject: [ConfigService],
     }),
-    BullModule.registerQueue({
-      name: 'event-logs',
-    }),
-  ],
-  controllers: [GameController, HealthController],
-  providers: [
-    GameService,
-    EventLogsProcessor,
-    GameGateway,
-    RedisService,
-    {
-      provide: 'APP_FILTER',
-      useClass: DomainExceptionFilter,
-    },
+    GameModule,
+    PlayerModule,
+    MessageModule,
+    GameEventModule,
+    HealthModule,
+    RedisModule,
   ],
 })
 export class AppModule {}

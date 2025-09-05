@@ -5,7 +5,6 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-  Relation,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Game } from './game.entity';
@@ -36,7 +35,7 @@ export class Message {
     enum: ['chat', 'system', 'game'],
     default: 'chat',
   })
-  type: Relation<MessageType>;
+  type: MessageType;
 
   @ApiProperty({ description: '게임 ID' })
   @Column({ type: 'int', unsigned: true })
@@ -44,7 +43,7 @@ export class Message {
 
   @ManyToOne(() => Game, (game) => game.messages, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'gameId' })
-  game: Relation<Game>;
+  game: Game;
 
   @ApiProperty({ description: '메시지 생성 시간' })
   @CreateDateColumn()

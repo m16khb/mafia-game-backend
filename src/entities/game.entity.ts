@@ -5,7 +5,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  Relation,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Player } from './player.entity';
@@ -35,7 +34,7 @@ export class Game {
     enum: ['waiting', 'playing', 'finished'],
     default: 'waiting',
   })
-  status: Relation<GameStatus>;
+  status: GameStatus;
 
   @ApiProperty({
     description: '현재 게임 페이즈',
@@ -47,7 +46,7 @@ export class Game {
     default: 'day',
     nullable: true,
   })
-  currentPhase: Relation<GamePhase>;
+  currentPhase: GamePhase;
 
   @ApiProperty({ description: '현재 일차', example: 1 })
   @Column({ type: 'int', default: 1 })
@@ -109,7 +108,7 @@ export class Game {
     cascade: true,
     eager: true,
   })
-  players: Relation<Player>[];
+  players: Player[];
 
   @ApiProperty({
     description: '채팅 메시지 목록',
@@ -119,10 +118,10 @@ export class Game {
     cascade: true,
     eager: true,
   })
-  messages: Relation<Message>[];
+  messages: Message[];
 
   @OneToMany(() => GameEvent, (gameEvent) => gameEvent.game, { cascade: true })
-  gameEvents: Relation<GameEvent>[];
+  gameEvents: GameEvent[];
 
   @UpdateDateColumn()
   updatedAt: Date;

@@ -6,10 +6,10 @@ import {
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RedisIoAdapter } from './common/redis-io.adapter';
-import { DomainExceptionFilter } from './common/filters/domain-exception.filter';
+import { RedisIoAdapter } from '@libs/redis/redis-io.adapter';
+import { DomainExceptionFilter } from '@libs/filters/domain-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ResponseTimeInterceptor } from './common/interceptors/response-time.interceptor';
+import { ResponseTimeInterceptor } from '@libs/interceptors/response-time.interceptor';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { createBullBoard } from '@bull-board/api';
@@ -31,6 +31,7 @@ async function bootstrap() {
   app.useWebSocketAdapter(redisIoAdapter);
 
   // CORS 설정
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   await app.register(require('@fastify/cors'), {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
@@ -81,7 +82,7 @@ async function bootstrap() {
     prefix: '/admin/queues',
   });
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 
   console.log(
