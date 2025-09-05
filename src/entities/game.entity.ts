@@ -56,12 +56,12 @@ export class Game {
   @Column({ type: 'int', default: 0 })
   remainingTime: number;
 
-  @ApiProperty({ description: '최대 플레이어 수', example: 8 })
-  @Column({ type: 'int', default: 8 })
+  @ApiProperty({ description: '최대 플레이어 수', example: 6 })
+  @Column({ type: 'int', default: 6 })
   maxPlayers: number;
 
-  @ApiProperty({ description: '최소 플레이어 수', example: 4 })
-  @Column({ type: 'int', default: 4 })
+  @ApiProperty({ description: '최소 플레이어 수', example: 6 })
+  @Column({ type: 'int', default: 6 })
   minPlayers: number;
 
   @ApiProperty({ description: '낮 시간 (초)', example: 300 })

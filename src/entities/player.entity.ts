@@ -35,6 +35,10 @@ export class Player {
   @Column({ type: 'boolean', default: false })
   isHost: boolean;
 
+  @ApiProperty({ description: 'AI 플레이어 여부', example: false })
+  @Column({ type: 'boolean', default: false })
+  isAi: boolean;
+
   @ApiProperty({
     description: '플레이어 역할',
     enum: ['citizen', 'mafia', 'police', 'doctor'],
