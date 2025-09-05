@@ -107,3 +107,6 @@ Thumbs.db
 # claude
 .claude/
 CLAUDE.md
+
+# gemini
+GEMINI.md
