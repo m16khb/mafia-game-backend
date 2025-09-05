@@ -29,7 +29,7 @@ import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
     GameRepository,
     {
       provide: GAME_REPOSITORY_TOKEN,
-      useClass: GameRepository,
+      useExisting: GameRepository,
     },
   ],
   exports: [GameService, GAME_REPOSITORY_TOKEN],

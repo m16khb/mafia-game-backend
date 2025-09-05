@@ -12,7 +12,7 @@ import { PLAYER_REPOSITORY_TOKEN } from '@libs/repositories';
     PlayerRepository,
     {
       provide: PLAYER_REPOSITORY_TOKEN,
-      useClass: PlayerRepository,
+      useExisting: PlayerRepository,
     },
   ],
   exports: [PlayerService, PLAYER_REPOSITORY_TOKEN],
