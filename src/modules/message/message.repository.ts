@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Message } from "../../entities/message.entity";
-import { IMessageRepository } from "@libs/repositories/message.repository.interface";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Message } from '../../entities/message.entity';
+import { IMessageRepository } from '@libs/repositories/message.repository.interface';
 
 @Injectable()
 export class MessageRepository implements IMessageRepository {
@@ -31,7 +31,7 @@ export class MessageRepository implements IMessageRepository {
 
   async findByGameIdOrderedByCreatedAt(
     gameId: number,
-    order: "ASC" | "DESC" = "ASC",
+    order: 'ASC' | 'DESC' = 'ASC',
   ): Promise<Message[]> {
     return this.repository.find({
       where: { gameId },

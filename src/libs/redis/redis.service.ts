@@ -1,6 +1,6 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { createClient, RedisClientType } from "redis";
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, RedisClientType } from 'redis';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -10,39 +10,39 @@ export class RedisService implements OnModuleDestroy {
   constructor(private configService: ConfigService) {
     const redisConfig = {
       socket: {
-        host: this.configService.get<string>("REDIS_HOST") || "localhost",
-        port: this.configService.get<number>("REDIS_PORT") || 6379,
+        host: this.configService.get<string>('REDIS_HOST') || 'localhost',
+        port: this.configService.get<number>('REDIS_PORT') || 6379,
       },
     };
 
     this.client = createClient(redisConfig);
     this.subscriber = createClient(redisConfig);
 
-    this.client.on("error", (err) => {
-      console.error("Redis Client Error:", err);
+    this.client.on('error', (err) => {
+      console.error('Redis Client Error:', err);
     });
 
-    this.subscriber.on("error", (err) => {
-      console.error("Redis Subscriber Error:", err);
+    this.subscriber.on('error', (err) => {
+      console.error('Redis Subscriber Error:', err);
     });
 
-    this.client.on("connect", () => {
-      console.log("📦 Redis connected");
+    this.client.on('connect', () => {
+      console.log('📦 Redis connected');
     });
 
     this.connectWithRetry();
   }
 
   private async connectWithRetry(): Promise<void> {
-    const maxRetries = this.configService.get<number>("REDIS_MAX_RETRIES") || 5;
+    const maxRetries = this.configService.get<number>('REDIS_MAX_RETRIES') || 5;
     let attempt = 0;
     const baseDelayMs =
-      this.configService.get<number>("REDIS_BASE_DELAY_MS") || 500;
+      this.configService.get<number>('REDIS_BASE_DELAY_MS') || 500;
     while (attempt < maxRetries) {
       try {
         await this.client.connect();
         await this.subscriber.connect();
-        console.log("📦 Redis connected (publisher & subscriber)");
+        console.log('📦 Redis connected (publisher & subscriber)');
         return;
       } catch (error) {
         attempt += 1;
@@ -55,7 +55,7 @@ export class RedisService implements OnModuleDestroy {
       }
     }
     console.error(
-      "Exceeded maximum Redis connection retries. Continuing without Redis.",
+      'Exceeded maximum Redis connection retries. Continuing without Redis.',
     );
   }
 

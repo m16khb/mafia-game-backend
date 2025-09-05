@@ -1,9 +1,9 @@
-import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Message } from "../../entities/message.entity";
-import { MessageService } from "./message.service";
-import { MessageRepository } from "./message.repository";
-import { MESSAGE_REPOSITORY_TOKEN } from "@libs/repositories";
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Message } from '../../entities/message.entity';
+import { MessageService } from './message.service';
+import { MessageRepository } from './message.repository';
+import { MESSAGE_REPOSITORY_TOKEN } from '@libs/repositories';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Message])],

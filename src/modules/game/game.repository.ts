@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Game } from "../../entities/game.entity";
-import { IGameRepository } from "@libs/repositories/game.repository.interface";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Game } from '../../entities/game.entity';
+import { IGameRepository } from '@libs/repositories/game.repository.interface';
 
 @Injectable()
 export class GameRepository implements IGameRepository {
@@ -35,14 +35,14 @@ export class GameRepository implements IGameRepository {
 
   async findAll(): Promise<Game[]> {
     return this.repository.find({
-      order: { createdAt: "DESC" },
+      order: { createdAt: 'DESC' },
     });
   }
 
   async findAllWithRelations(relations: string[]): Promise<Game[]> {
     return this.repository.find({
       relations,
-      order: { createdAt: "DESC" },
+      order: { createdAt: 'DESC' },
     });
   }
 

@@ -1,10 +1,10 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
-import { Injectable, Logger, Inject } from "@nestjs/common";
-import { Job } from "bullmq";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Job } from 'bullmq';
 import {
   IGameEventRepository,
   GAME_EVENT_REPOSITORY_TOKEN,
-} from "@libs/repositories";
+} from '@libs/repositories';
 
 interface EventLogJobData {
   gameId: number;
@@ -12,7 +12,7 @@ interface EventLogJobData {
   eventData?: Record<string, any>;
 }
 
-@Processor("event-logs")
+@Processor('event-logs')
 @Injectable()
 export class EventLogsProcessor extends WorkerHost {
   private readonly logger = new Logger(EventLogsProcessor.name);

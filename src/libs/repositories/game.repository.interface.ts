@@ -1,4 +1,4 @@
-import { Game } from "../../entities/game.entity";
+import { Game } from '../../entities/game.entity';
 
 export interface IGameRepository {
   create(gameData: Partial<Game>): Game;

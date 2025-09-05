@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { GameEvent } from "../../entities/game-event.entity";
-import { IGameEventRepository } from "@libs/repositories/game-event.repository.interface";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GameEvent } from '../../entities/game-event.entity';
+import { IGameEventRepository } from '@libs/repositories/game-event.repository.interface';
 
 @Injectable()
 export class GameEventRepository implements IGameEventRepository {
@@ -31,7 +31,7 @@ export class GameEventRepository implements IGameEventRepository {
 
   async findByGameIdOrderedByCreatedAt(
     gameId: number,
-    order: "ASC" | "DESC" = "ASC",
+    order: 'ASC' | 'DESC' = 'ASC',
   ): Promise<GameEvent[]> {
     return this.repository.find({
       where: { gameId },

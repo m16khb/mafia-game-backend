@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Player } from "../../entities/player.entity";
-import { IPlayerRepository } from "@libs/repositories/player.repository.interface";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Player } from '../../entities/player.entity';
+import { IPlayerRepository } from '@libs/repositories/player.repository.interface';
 
 @Injectable()
 export class PlayerRepository implements IPlayerRepository {
@@ -26,7 +26,7 @@ export class PlayerRepository implements IPlayerRepository {
   async findByIdWithGame(id: number): Promise<Player | null> {
     return this.repository.findOne({
       where: { id },
-      relations: ["game"],
+      relations: { game: true },
     });
   }
 
@@ -37,7 +37,7 @@ export class PlayerRepository implements IPlayerRepository {
   async findBySocketIdWithGame(socketId: string): Promise<Player | null> {
     return this.repository.findOne({
       where: { socketId },
-      relations: ["game"],
+      relations: { game: true },
     });
   }
 
@@ -48,7 +48,7 @@ export class PlayerRepository implements IPlayerRepository {
   async findByGameIdWithGame(gameId: number): Promise<Player[]> {
     return this.repository.find({
       where: { gameId },
-      relations: ["game"],
+      relations: { game: true },
     });
   }
 

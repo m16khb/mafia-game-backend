@@ -1,20 +1,20 @@
-import { NestFactory } from "@nestjs/core";
+import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
   NestFastifyApplication,
-} from "@nestjs/platform-fastify";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { RedisIoAdapter } from "@libs/redis/redis-io.adapter";
-import { DomainExceptionFilter } from "@libs/filters/domain-exception.filter";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { ResponseTimeInterceptor } from "@libs/interceptors/response-time.interceptor";
-import { getQueueToken } from "@nestjs/bullmq";
-import { Queue } from "bullmq";
-import { createBullBoard } from "@bull-board/api";
-import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { FastifyAdapter as BullBoardFastifyAdapter } from "@bull-board/fastify";
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { RedisIoAdapter } from '@libs/redis/redis-io.adapter';
+import { DomainExceptionFilter } from '@libs/filters/domain-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ResponseTimeInterceptor } from '@libs/interceptors/response-time.interceptor';
+import { getQueueToken } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { FastifyAdapter as BullBoardFastifyAdapter } from '@bull-board/fastify';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -32,8 +32,8 @@ async function bootstrap() {
 
   // CORS 설정
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  await app.register(require("@fastify/cors"), {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  await app.register(require('@fastify/cors'), {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   });
 
@@ -56,22 +56,22 @@ async function bootstrap() {
 
   // Swagger 설정
   const config = new DocumentBuilder()
-    .setTitle("Mafia Game API")
+    .setTitle('Mafia Game API')
     .setDescription(
-      "AI Mafia Game - Real-time multiplayer mafia game API (Layered Architecture)",
+      'AI Mafia Game - Real-time multiplayer mafia game API (Layered Architecture)',
     )
-    .setVersion("1.0")
-    .addTag("games", "Game management")
+    .setVersion('1.0')
+    .addTag('games', 'Game management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api/docs", app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Bull Board 설정
-  const eventLogsQueue = app.get<Queue>(getQueueToken("event-logs"));
+  const eventLogsQueue = app.get<Queue>(getQueueToken('event-logs'));
 
   const serverAdapter = new BullBoardFastifyAdapter();
-  serverAdapter.setBasePath("/admin/queues");
+  serverAdapter.setBasePath('/admin/queues');
 
   createBullBoard({
     queues: [new BullMQAdapter(eventLogsQueue)],
@@ -79,11 +79,11 @@ async function bootstrap() {
   });
 
   await app.register(serverAdapter.registerPlugin(), {
-    prefix: "/admin/queues",
+    prefix: '/admin/queues',
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port, "0.0.0.0");
+  await app.listen(port, '0.0.0.0');
 
   console.log(
     `🚀 Mafia Game Backend (Layered Architecture) running on port ${port} with Fastify & Redis Socket.IO`,

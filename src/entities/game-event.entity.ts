@@ -5,29 +5,28 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
-  Relation,
-} from "typeorm";
-import { Game } from "./game.entity";
+} from 'typeorm';
+import { Game } from './game.entity';
 
-@Entity("game_events")
+@Entity('game_events')
 export class GameEvent {
-  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
+  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
   id: number;
 
-  @Column({ type: "varchar", length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   eventType: string;
 
-  @Column({ type: "json", nullable: true })
+  @Column({ type: 'json', nullable: true })
   eventData: Record<string, any>;
 
-  @Column({ type: "int", unsigned: true })
+  @Column({ type: 'int', unsigned: true })
   gameId: number;
 
   @ManyToOne(() => Game, (game) => game.gameEvents, {
-    onDelete: "CASCADE",
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: "gameId" })
-  game: Relation<Game>;
+  @JoinColumn({ name: 'gameId' })
+  game: Game;
 
   @CreateDateColumn()
   createdAt: Date;

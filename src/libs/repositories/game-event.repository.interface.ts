@@ -1,4 +1,4 @@
-import { GameEvent } from "../../entities/game-event.entity";
+import { GameEvent } from '../../entities/game-event.entity';
 
 export interface IGameEventRepository {
   create(eventData: Partial<GameEvent>): GameEvent;
@@ -7,7 +7,7 @@ export interface IGameEventRepository {
   findByGameId(gameId: number): Promise<GameEvent[]>;
   findByGameIdOrderedByCreatedAt(
     gameId: number,
-    order: "ASC" | "DESC",
+    order: 'ASC' | 'DESC',
   ): Promise<GameEvent[]>;
   deleteByGameId(gameId: number): Promise<void>;
 }

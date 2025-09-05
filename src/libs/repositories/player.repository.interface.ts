@@ -1,4 +1,4 @@
-import { Player } from "../../entities/player.entity";
+import { Player } from '../../entities/player.entity';
 
 export interface IPlayerRepository {
   create(playerData: Partial<Player>): Player;

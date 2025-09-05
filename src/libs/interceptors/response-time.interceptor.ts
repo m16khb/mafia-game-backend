@@ -3,9 +3,9 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-} from "@nestjs/common";
-import { Observable } from "rxjs";
-import { tap } from "rxjs/operators";
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 @Injectable()
 export class ResponseTimeInterceptor implements NestInterceptor {
@@ -16,7 +16,7 @@ export class ResponseTimeInterceptor implements NestInterceptor {
       tap(() => {
         const response = context.switchToHttp().getResponse();
         const responseTime = performance.now() - startTime;
-        response.header("X-Response-Time", `${responseTime}ms`);
+        response.header('X-Response-Time', `${responseTime}ms`);
       }),
     );
   }

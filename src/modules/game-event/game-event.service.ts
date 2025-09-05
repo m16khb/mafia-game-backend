@@ -1,9 +1,9 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { GameEvent } from "../../entities/game-event.entity";
+import { Injectable, Inject } from '@nestjs/common';
+import { GameEvent } from '../../entities/game-event.entity';
 import {
   IGameEventRepository,
   GAME_EVENT_REPOSITORY_TOKEN,
-} from "@libs/repositories";
+} from '@libs/repositories';
 
 @Injectable()
 export class GameEventService {
@@ -29,7 +29,7 @@ export class GameEventService {
   async getEventsByGameId(gameId: number): Promise<GameEvent[]> {
     return this.gameEventRepository.findByGameIdOrderedByCreatedAt(
       gameId,
-      "ASC",
+      'ASC',
     );
   }
 

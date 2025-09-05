@@ -1,4 +1,4 @@
-import { Message } from "../../entities/message.entity";
+import { Message } from '../../entities/message.entity';
 
 export interface IMessageRepository {
   create(messageData: Partial<Message>): Message;
@@ -7,7 +7,7 @@ export interface IMessageRepository {
   findByGameId(gameId: number): Promise<Message[]>;
   findByGameIdOrderedByCreatedAt(
     gameId: number,
-    order: "ASC" | "DESC",
+    order: 'ASC' | 'DESC',
   ): Promise<Message[]>;
   deleteByGameId(gameId: number): Promise<void>;
 }

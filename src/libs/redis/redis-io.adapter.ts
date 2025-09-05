@@ -1,8 +1,8 @@
-import { IoAdapter } from "@nestjs/platform-socket.io";
-import { ServerOptions } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
-import { ConfigService } from "@nestjs/config";
+import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ServerOptions } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+import { ConfigService } from '@nestjs/config';
 
 export class RedisIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter>;
@@ -14,17 +14,17 @@ export class RedisIoAdapter extends IoAdapter {
   async connectToRedis(): Promise<void> {
     const pubClient = createClient({
       socket: {
-        host: this.configService.get<string>("REDIS_HOST") || "localhost",
-        port: this.configService.get<number>("REDIS_PORT") || 6379,
+        host: this.configService.get<string>('REDIS_HOST') || 'localhost',
+        port: this.configService.get<number>('REDIS_PORT') || 6379,
       },
     });
 
     const subClient = pubClient.duplicate();
 
     let attempt = 0;
-    const maxRetries = this.configService.get<number>("REDIS_MAX_RETRIES") || 5;
+    const maxRetries = this.configService.get<number>('REDIS_MAX_RETRIES') || 5;
     const baseDelayMs =
-      this.configService.get<number>("REDIS_BASE_DELAY_MS") || 500;
+      this.configService.get<number>('REDIS_BASE_DELAY_MS') || 500;
     while (attempt < maxRetries) {
       try {
         await Promise.all([pubClient.connect(), subClient.connect()]);
@@ -50,7 +50,7 @@ export class RedisIoAdapter extends IoAdapter {
     } else {
       // 폴백: 단일 노드 모드 (in-memory adapter)
       console.warn(
-        "Redis adapter unavailable. Falling back to in-memory Socket.IO adapter.",
+        'Redis adapter unavailable. Falling back to in-memory Socket.IO adapter.',
       );
     }
     return server;

@@ -1,7 +1,7 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { Player } from "../../entities/player.entity";
-import { NotFoundError } from "@libs/errors/domain-error";
-import { IPlayerRepository, PLAYER_REPOSITORY_TOKEN } from "@libs/repositories";
+import { Injectable, Inject } from '@nestjs/common';
+import { Player } from '../../entities/player.entity';
+import { NotFoundError } from '@libs/errors/domain-error';
+import { IPlayerRepository, PLAYER_REPOSITORY_TOKEN } from '@libs/repositories';
 
 @Injectable()
 export class PlayerService {
@@ -22,7 +22,7 @@ export class PlayerService {
     const player = await this.playerRepository.findById(playerId);
 
     if (!player) {
-      throw new NotFoundError("Player", { id: playerId });
+      throw new NotFoundError('Player', { id: playerId });
     }
 
     player.isReady = isReady;

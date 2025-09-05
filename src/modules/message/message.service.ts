@@ -1,9 +1,9 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { Message } from "../../entities/message.entity";
+import { Injectable, Inject } from '@nestjs/common';
+import { Message } from '../../entities/message.entity';
 import {
   IMessageRepository,
   MESSAGE_REPOSITORY_TOKEN,
-} from "@libs/repositories";
+} from '@libs/repositories';
 
 @Injectable()
 export class MessageService {
@@ -17,7 +17,7 @@ export class MessageService {
     senderId: number,
     senderName: string,
     content: string,
-    type: "chat" | "system" | "game" = "chat",
+    type: 'chat' | 'system' | 'game' = 'chat',
   ): Promise<Message> {
     const message = this.messageRepository.create({
       content,
@@ -31,7 +31,7 @@ export class MessageService {
   }
 
   async getMessagesByGameId(gameId: number): Promise<Message[]> {
-    return this.messageRepository.findByGameIdOrderedByCreatedAt(gameId, "ASC");
+    return this.messageRepository.findByGameIdOrderedByCreatedAt(gameId, 'ASC');
   }
 
   async deleteMessagesByGameId(gameId: number): Promise<void> {
