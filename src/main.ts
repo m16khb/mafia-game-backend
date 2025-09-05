@@ -25,17 +25,22 @@ async function bootstrap() {
   // ConfigService 가져오기
   const configService = app.get(ConfigService);
 
-  // Redis Socket.IO 어댑터 설정
-  const redisIoAdapter = new RedisIoAdapter(configService);
-  await redisIoAdapter.connectToRedis();
-  app.useWebSocketAdapter(redisIoAdapter);
-
   // CORS 설정
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   await app.register(require('@fastify/cors'), {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
   });
+
+  // Redis Socket.IO 어댑터 설정
+  try {
+    const redisIoAdapter = new RedisIoAdapter(app, configService);
+    await redisIoAdapter.connectToRedis();
+    app.useWebSocketAdapter(redisIoAdapter);
+    console.log('✅ Redis Socket.IO adapter initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize Redis adapter:', error);
+  }
 
   // 전역 ValidationPipe 설정
   app.useGlobalPipes(
