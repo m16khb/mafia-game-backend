@@ -10,13 +10,11 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { GameService } from './game.service';
-import { GameResponseDto } from './dtos/game-response.dto';
 @WebSocketGateway({
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -35,8 +33,30 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Handle player removal logic here
   }
 
-  @SubscribeMessage('send-message')
-  async handleSendMessage(
+  @SubscribeMessage('join-game-room')
+  async handleJoinGameRoom(
+    @MessageBody() data: { gameId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const roomName = `game-${data.gameId}`;
+    client.join(roomName);
+    this.logger.log(`Client ${client.id} joined room: ${roomName}`);
+    return { success: true, room: roomName };
+  }
+
+  @SubscribeMessage('leave-game-room')
+  async handleLeaveGameRoom(
+    @MessageBody() data: { gameId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const roomName = `game-${data.gameId}`;
+    client.leave(roomName);
+    this.logger.log(`Client ${client.id} left room: ${roomName}`);
+    return { success: true };
+  }
+
+  @SubscribeMessage('user-message')
+  async handleUserMessage(
     @MessageBody()
     data: {
       gameId: number;
@@ -46,6 +66,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
     @ConnectedSocket() _client: Socket,
   ) {
+    this.logger.log(`User message: ${JSON.stringify(data, null, 2)}`);
+
     try {
       const message = await this.gameService.sendMessage(
         data.gameId,
@@ -55,31 +77,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         'chat',
       );
 
-      // Broadcast message to all players in the game
-      this.server.to(data.gameId.toString()).emit('new-message', {
+      // 특정 게임방에만 메시지 브로드캐스트
+      const roomName = `game-${data.gameId}`;
+      const messageData = {
         id: message.id,
         content: message.content,
         senderName: message.senderName,
         senderId: message.senderId,
-        type: message.type,
         createdAt: message.createdAt,
-      });
+      };
+
+      this.server.to(roomName).emit('ai-message', messageData);
 
       return { success: true };
     } catch (error) {
-      this.logger.error(`Failed to send message: ${error.message}`);
+      this.logger.error(`Failed to user message: ${error.message}`);
       return { success: false, error: error.message };
-    }
-  }
-
-  // Utility method to broadcast game state
-  async broadcastGameState(gameId: number) {
-    try {
-      const game = await this.gameService.getGame(gameId);
-      const gameResponse = GameResponseDto.fromEntity(game);
-      this.server.to(gameId.toString()).emit('game-state', gameResponse);
-    } catch (error) {
-      this.logger.error(`Failed to broadcast game state: ${error.message}`);
     }
   }
 }
