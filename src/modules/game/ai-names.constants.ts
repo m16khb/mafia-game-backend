@@ -1,0 +1,17 @@
+export const AI_NAMES = [
+  'Alice',
+  'Bob',
+  'Charlie',
+  'David',
+  'Eve',
+  'Frank',
+  'Grace',
+  'Heidi',
+  'Ivan',
+  'Judy',
+  'Mallory',
+  'Oscar',
+  'Peggy',
+  'Trent',
+  'Walter',
+];
