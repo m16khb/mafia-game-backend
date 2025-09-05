@@ -6,103 +6,103 @@ import {
   UpdateDateColumn,
   OneToMany,
   Relation,
-} from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
-import { Player } from './player.entity';
-import { Message } from './message.entity';
-import { GameEvent } from './game-event.entity';
+} from "typeorm";
+import { ApiProperty } from "@nestjs/swagger";
+import { Player } from "./player.entity";
+import { Message } from "./message.entity";
+import { GameEvent } from "./game-event.entity";
 
-export type GameStatus = 'waiting' | 'playing' | 'finished';
-export type GamePhase = 'day' | 'night' | 'voting' | 'result';
-export type GameRole = 'citizen' | 'mafia' | 'police' | 'doctor';
+export type GameStatus = "waiting" | "playing" | "finished";
+export type GamePhase = "day" | "night" | "voting" | "result";
+export type GameRole = "citizen" | "mafia" | "police" | "doctor";
 
-@Entity('games')
+@Entity("games")
 export class Game {
-  @ApiProperty({ description: '게임 ID', example: 1 })
-  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
+  @ApiProperty({ description: "게임 ID", example: 1 })
+  @PrimaryGeneratedColumn({ type: "int", unsigned: true })
   id: number;
 
-  @ApiProperty({ description: '게임 이름', example: 'Mafia Game #1' })
-  @Column({ type: 'varchar', length: 100 })
+  @ApiProperty({ description: "게임 이름", example: "Mafia Game #1" })
+  @Column({ type: "varchar", length: 100 })
   name: string;
 
   @ApiProperty({
-    description: '게임 상태',
-    enum: ['waiting', 'playing', 'finished'],
+    description: "게임 상태",
+    enum: ["waiting", "playing", "finished"],
   })
   @Column({
-    type: 'enum',
-    enum: ['waiting', 'playing', 'finished'],
-    default: 'waiting',
+    type: "enum",
+    enum: ["waiting", "playing", "finished"],
+    default: "waiting",
   })
   status: Relation<GameStatus>;
 
   @ApiProperty({
-    description: '현재 게임 페이즈',
-    enum: ['day', 'night', 'voting', 'result'],
+    description: "현재 게임 페이즈",
+    enum: ["day", "night", "voting", "result"],
   })
   @Column({
-    type: 'enum',
-    enum: ['day', 'night', 'voting', 'result'],
-    default: 'day',
+    type: "enum",
+    enum: ["day", "night", "voting", "result"],
+    default: "day",
     nullable: true,
   })
   currentPhase: Relation<GamePhase>;
 
-  @ApiProperty({ description: '현재 일차', example: 1 })
-  @Column({ type: 'int', default: 1 })
+  @ApiProperty({ description: "현재 일차", example: 1 })
+  @Column({ type: "int", default: 1 })
   dayCount: number;
 
-  @ApiProperty({ description: '남은 시간 (초)', example: 300 })
-  @Column({ type: 'int', default: 0 })
+  @ApiProperty({ description: "남은 시간 (초)", example: 300 })
+  @Column({ type: "int", default: 0 })
   remainingTime: number;
 
-  @ApiProperty({ description: '최대 플레이어 수', example: 8 })
-  @Column({ type: 'int', default: 8 })
+  @ApiProperty({ description: "최대 플레이어 수", example: 8 })
+  @Column({ type: "int", default: 8 })
   maxPlayers: number;
 
-  @ApiProperty({ description: '최소 플레이어 수', example: 4 })
-  @Column({ type: 'int', default: 4 })
+  @ApiProperty({ description: "최소 플레이어 수", example: 4 })
+  @Column({ type: "int", default: 4 })
   minPlayers: number;
 
-  @ApiProperty({ description: '낮 시간 (초)', example: 300 })
-  @Column({ type: 'int', default: 300 })
+  @ApiProperty({ description: "낮 시간 (초)", example: 300 })
+  @Column({ type: "int", default: 300 })
   dayTimeSeconds: number;
 
-  @ApiProperty({ description: '밤 시간 (초)', example: 180 })
-  @Column({ type: 'int', default: 180 })
+  @ApiProperty({ description: "밤 시간 (초)", example: 180 })
+  @Column({ type: "int", default: 180 })
   nightTimeSeconds: number;
 
-  @ApiProperty({ description: '투표 시간 (초)', example: 120 })
-  @Column({ type: 'int', default: 120 })
+  @ApiProperty({ description: "투표 시간 (초)", example: 120 })
+  @Column({ type: "int", default: 120 })
   voteTimeSeconds: number;
 
-  @ApiProperty({ description: '게임 생성 시간' })
+  @ApiProperty({ description: "게임 생성 시간" })
   @CreateDateColumn()
   createdAt: Date;
 
-  @ApiProperty({ description: '게임 시작 시간', required: false })
-  @Column({ type: 'timestamp', nullable: true })
+  @ApiProperty({ description: "게임 시작 시간", required: false })
+  @Column({ type: "timestamp", nullable: true })
   startedAt: Date;
 
-  @ApiProperty({ description: '게임 종료 시간', required: false })
-  @Column({ type: 'timestamp', nullable: true })
+  @ApiProperty({ description: "게임 종료 시간", required: false })
+  @Column({ type: "timestamp", nullable: true })
   endedAt: Date;
 
   @ApiProperty({
-    description: '승리자',
-    enum: ['mafia', 'citizen'],
+    description: "승리자",
+    enum: ["mafia", "citizen"],
     required: false,
   })
   @Column({
-    type: 'enum',
-    enum: ['mafia', 'citizen'],
+    type: "enum",
+    enum: ["mafia", "citizen"],
     nullable: true,
   })
-  winner: 'mafia' | 'citizen';
+  winner: "mafia" | "citizen";
 
   @ApiProperty({
-    description: '참여 플레이어 목록',
+    description: "참여 플레이어 목록",
     type: () => [Player],
   })
   @OneToMany(() => Player, (player) => player.game, {
@@ -112,7 +112,7 @@ export class Game {
   players: Relation<Player>[];
 
   @ApiProperty({
-    description: '채팅 메시지 목록',
+    description: "채팅 메시지 목록",
     type: () => [Message],
   })
   @OneToMany(() => Message, (message) => message.game, {
@@ -130,19 +130,19 @@ export class Game {
   // Business Logic Methods
   canStart(): boolean {
     return (
-      this.status === 'waiting' &&
+      this.status === "waiting" &&
       this.players.length >= this.minPlayers &&
       this.players.every((p) => p.isReady)
     );
   }
 
   canAddPlayer(): boolean {
-    return this.status === 'waiting' && this.players.length < this.maxPlayers;
+    return this.status === "waiting" && this.players.length < this.maxPlayers;
   }
 
   addPlayer(player: Player): void {
     if (!this.canAddPlayer()) {
-      throw new Error('Cannot add player to game');
+      throw new Error("Cannot add player to game");
     }
     this.players.push(player);
   }
@@ -165,38 +165,38 @@ export class Game {
   start(): void {
     if (!this.canStart()) {
       throw new Error(
-        'Cannot start game: not enough players or players not ready',
+        "Cannot start game: not enough players or players not ready",
       );
     }
     this.assignRoles();
-    this.status = 'playing';
-    this.currentPhase = 'night';
+    this.status = "playing";
+    this.currentPhase = "night";
     this.startedAt = new Date();
     this.remainingTime = this.nightTimeSeconds;
   }
 
   finish(): void {
-    this.status = 'finished';
+    this.status = "finished";
     this.endedAt = new Date();
   }
 
   nextPhase(): void {
     switch (this.currentPhase) {
-      case 'night':
-        this.currentPhase = 'day';
+      case "night":
+        this.currentPhase = "day";
         this.remainingTime = this.dayTimeSeconds;
         break;
-      case 'day':
-        this.currentPhase = 'voting';
+      case "day":
+        this.currentPhase = "voting";
         this.remainingTime = this.voteTimeSeconds;
         break;
-      case 'voting':
-        this.currentPhase = 'result';
+      case "voting":
+        this.currentPhase = "result";
         this.remainingTime = 10; // 10초 결과 표시
         break;
-      case 'result':
+      case "result":
         this.dayCount++;
-        this.currentPhase = 'night';
+        this.currentPhase = "night";
         this.remainingTime = this.nightTimeSeconds;
         break;
     }
@@ -218,15 +218,15 @@ export class Game {
     return this.players.filter((p) => !p.isMafia() && p.isAlive);
   }
 
-  isGameOver(): { isOver: boolean; winner?: 'mafia' | 'citizen' } {
+  isGameOver(): { isOver: boolean; winner?: "mafia" | "citizen" } {
     const aliveMafia = this.getMafiaPlayers().length;
     const aliveCitizens = this.getCitizenPlayers().length;
 
     if (aliveMafia === 0) {
-      return { isOver: true, winner: 'citizen' };
+      return { isOver: true, winner: "citizen" };
     }
     if (aliveMafia >= aliveCitizens) {
-      return { isOver: true, winner: 'mafia' };
+      return { isOver: true, winner: "mafia" };
     }
     return { isOver: false };
   }
@@ -238,11 +238,11 @@ export class Game {
     const doctorCount = 1;
 
     const roles: GameRole[] = [
-      ...Array(mafiaCount).fill('mafia'),
-      ...Array(policeCount).fill('police'),
-      ...Array(doctorCount).fill('doctor'),
+      ...Array(mafiaCount).fill("mafia"),
+      ...Array(policeCount).fill("police"),
+      ...Array(doctorCount).fill("doctor"),
       ...Array(playerCount - mafiaCount - policeCount - doctorCount).fill(
-        'citizen',
+        "citizen",
       ),
     ];
 
