@@ -233,16 +233,16 @@ export class Game {
   private assignRoles(): void {
     const playerCount = this.players.length;
     const mafiaCount = Math.ceil(playerCount / 3);
-    const policeCount = 1;
-    const doctorCount = 1;
+    const policeCount = Math.max(0, playerCount - mafiaCount);
+    const doctorCount = Math.max(0, playerCount - mafiaCount - policeCount);
 
     const roles: GameRole[] = [
       ...Array(mafiaCount).fill('mafia'),
       ...Array(policeCount).fill('police'),
       ...Array(doctorCount).fill('doctor'),
-      ...Array(playerCount - mafiaCount - policeCount - doctorCount).fill(
-        'citizen',
-      ),
+      ...Array(
+        Math.max(0, playerCount - mafiaCount - policeCount - doctorCount),
+      ).fill('citizen'),
     ];
 
     // 역할 섞기

@@ -18,10 +18,7 @@ import {
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { GameService } from './game.service';
-import {
-  CreateGameRequestDto,
-  JoinGameRequestDto,
-} from './dtos/game-request.dto';
+import { CreateGameRequestDto } from './dtos/game-request.dto';
 import {
   CreateGameResponseDto,
   GameResponseDto,
@@ -50,10 +47,7 @@ export class GameController {
   async createGame(
     @Body() createGameDto: CreateGameRequestDto,
   ): Promise<CreateGameResponseDto> {
-    const result = await this.gameService.createGame(
-      createGameDto.hostName,
-      createGameDto.hostSocketId,
-    );
+    const result = await this.gameService.createGame(createGameDto);
     return CreateGameResponseDto.create(result.gameId, result.game);
   }
 

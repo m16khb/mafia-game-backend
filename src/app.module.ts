@@ -13,6 +13,10 @@ import { GameEventModule } from './modules/game-event/game-event.module';
 import { HealthModule } from './modules/health/health.module';
 import { RedisModule } from '@libs/redis/redis.module';
 import { LlmModule } from './modules/llm/llm.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ClsModule } from 'nestjs-cls';
+import { randomUUID } from 'crypto';
+import { LoggerModule } from './libs/logger/logger.module';
 
 @Module({
   imports: [
@@ -20,6 +24,16 @@ import { LlmModule } from './modules/llm/llm.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true,
+        setup: (cls) => {
+          cls.set('request-context', randomUUID());
+        },
+      },
+    }),
+    LoggerModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -45,6 +59,7 @@ import { LlmModule } from './modules/llm/llm.module';
       }),
       inject: [ConfigService],
     }),
+    EventEmitterModule.forRoot(),
     GameModule,
     PlayerModule,
     MessageModule,

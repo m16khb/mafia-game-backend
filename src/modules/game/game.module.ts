@@ -13,6 +13,7 @@ import { PlayerModule } from '../player/player.module';
 import { MessageModule } from '../message/message.module';
 import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
 import { LlmModule } from '../llm/llm.module';
+import { EventLogQueueService } from '../game-event/event-log-queue.service';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { LlmModule } from '../llm/llm.module';
     GameService,
     GameGateway,
     GameRepository,
+    EventLogQueueService,
     {
       provide: GAME_REPOSITORY_TOKEN,
       useExisting: GameRepository,

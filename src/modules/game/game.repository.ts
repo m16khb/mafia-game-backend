@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Game } from '../../entities/game.entity';
 import { IGameRepository } from '@libs/repositories/game.repository.interface';
+import { Logger } from '@/libs/logger/logger.service';
 
 @Injectable()
 export class GameRepository implements IGameRepository {
   constructor(
     @InjectRepository(Game)
     private readonly repository: Repository<Game>,
+    private readonly logger: Logger,
   ) {}
 
   create(gameData: Partial<Game>): Game {

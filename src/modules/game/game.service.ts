@@ -1,6 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   NotFoundError,
   ValidationError,
@@ -16,14 +14,17 @@ import {
   PLAYER_REPOSITORY_TOKEN,
   MESSAGE_REPOSITORY_TOKEN,
 } from '@libs/repositories';
-import { LlmService } from '../llm/llm.service';
 import { AI_NAMES } from './ai-names.constants';
 import { Player } from '@/entities/player.entity';
-import { LLM_SERVICES } from '../llm/providers/llm.constants';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MessageService } from '../message/message.service';
+import { ClsService } from 'nestjs-cls';
+import { Logger } from '@/libs/logger/logger.service';
+import { CreateGameRequestDto } from './dtos/game-request.dto';
+import { EventLogQueueService } from '../game-event/event-log-queue.service';
 
 @Injectable()
 export class GameService {
-  private readonly logger = new Logger(GameService.name);
   constructor(
     @Inject(GAME_REPOSITORY_TOKEN)
     private readonly gameRepository: IGameRepository,
@@ -31,17 +32,22 @@ export class GameService {
     private readonly playerRepository: IPlayerRepository,
     @Inject(MESSAGE_REPOSITORY_TOKEN)
     private readonly messageRepository: IMessageRepository,
-    @InjectQueue('event-logs')
-    private readonly eventLogsQueue: Queue,
-    @Inject(LLM_SERVICES)
-    private readonly llmService: LlmService,
-  ) {}
+    private readonly messageService: MessageService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly logger: Logger,
+    private readonly cls: ClsService,
+    private readonly eventLogQueueService: EventLogQueueService,
+  ) {
+    this.logger.setContext(GameService.name);
+  }
 
   async createGame(
-    hostName: string,
-    hostSocketId: string,
+    createGameDto: CreateGameRequestDto,
   ): Promise<{ gameId: number; game: Game }> {
-    // Create game (ID will be auto-generated)
+    this.logger.log(createGameDto);
+
+    const { hostName, hostSocketId } = createGameDto;
+
     const game = this.gameRepository.create({
       name: `${hostName}의 게임`,
       status: 'waiting',
@@ -53,10 +59,14 @@ export class GameService {
     const savedGame = await this.gameRepository.save(game);
 
     // 게임 생성 이벤트 로그 추가
-    await this.addEventLogJob(savedGame.id, 'game-created', {
-      hostName,
-      gameName: savedGame.name,
-    });
+    await this.eventLogQueueService.addEventLogJob(
+      savedGame.id,
+      'game-created',
+      {
+        hostName,
+        gameName: savedGame.name,
+      },
+    );
 
     // Create host player (ID will be auto-generated)
     const host = this.playerRepository.create({
@@ -71,10 +81,14 @@ export class GameService {
     await this.playerRepository.save(host);
 
     // 플레이어 참가 이벤트 로그 추가
-    await this.addEventLogJob(savedGame.id, 'player-joined', {
-      playerName: hostName,
-      isHost: true,
-    });
+    await this.eventLogQueueService.addEventLogJob(
+      savedGame.id,
+      'player-joined',
+      {
+        playerName: hostName,
+        isHost: true,
+      },
+    );
 
     // Reload game with players
     const gameWithHuman = await this.gameRepository.findByIdWithRelations(
@@ -106,11 +120,15 @@ export class GameService {
     await this.playerRepository.save(createdAiPlayers);
 
     for (const ai of createdAiPlayers) {
-      await this.addEventLogJob(savedGame.id, 'player-joined', {
-        playerName: ai.name,
-        isHost: false,
-        isAi: true,
-      });
+      await this.eventLogQueueService.addEventLogJob(
+        savedGame.id,
+        'player-joined',
+        {
+          playerName: ai.name,
+          isHost: false,
+          isAi: true,
+        },
+      );
     }
 
     const finalGame = await this.gameRepository.findByIdWithRelations(
@@ -122,6 +140,8 @@ export class GameService {
   }
 
   async getGame(gameId: number, requestingPlayerId?: number): Promise<Game> {
+    this.logger.log({ gameId });
+
     const game = await this.gameRepository.findByIdWithRelations(gameId, {
       players: true,
       messages: true,
@@ -190,7 +210,7 @@ export class GameService {
     await this.playerRepository.save(player);
 
     // 플레이어 참가 이벤트 로그 추가
-    await this.addEventLogJob(gameId, 'player-joined', {
+    await this.eventLogQueueService.addEventLogJob(gameId, 'player-joined', {
       playerName,
       isHost: false,
     });
@@ -222,14 +242,14 @@ export class GameService {
     await this.playerRepository.delete({ socketId, gameId });
 
     // 플레이어 퇴장 이벤트 로그 추가
-    await this.addEventLogJob(gameId, 'player-left', {
+    await this.eventLogQueueService.addEventLogJob(gameId, 'player-left', {
       socketId,
       playerName: playerToRemove.name,
     });
 
     // If no players left, delete the game
     if (game.players.length === 0) {
-      await this.addEventLogJob(gameId, 'game-deleted', {
+      await this.eventLogQueueService.addEventLogJob(gameId, 'game-deleted', {
         reason: 'no-players-left',
       });
       await this.gameRepository.delete(gameId);
@@ -265,10 +285,12 @@ export class GameService {
     }
 
     // 게임 시작 이벤트 로그 추가
-    await this.addEventLogJob(gameId, 'game-started', {
+    await this.eventLogQueueService.addEventLogJob(gameId, 'game-started', {
       playerCount: game.players.length,
       roles: game.players.map((p) => ({ name: p.name, role: p.role })),
     });
+
+    this.eventEmitter.emit('game.started', { roomName: `game-${gameId}` });
 
     return this.getGame(gameId);
   }
@@ -276,7 +298,6 @@ export class GameService {
   async sendMessage(
     gameId: number,
     senderId: number,
-    senderName: string,
     content: string,
     type: 'chat' | 'system' | 'game' = 'chat',
   ): Promise<Message> {
@@ -286,10 +307,12 @@ export class GameService {
       throw new NotFoundError('Game', { id: gameId });
     }
 
+    const sender = await this.playerRepository.findById(senderId);
+
     const message = this.messageRepository.create({
       content,
-      senderName,
       senderId,
+      senderName: sender.name,
       type,
       gameId,
     });
@@ -298,9 +321,9 @@ export class GameService {
 
     // 메시지 이벤트 로그 추가 (시스템/게임 메시지만)
     if (type !== 'chat') {
-      await this.addEventLogJob(gameId, 'message-sent', {
+      await this.eventLogQueueService.addEventLogJob(gameId, 'message-sent', {
         messageType: type,
-        senderName,
+        senderName: sender.name,
         content,
       });
     }
@@ -326,10 +349,14 @@ export class GameService {
     await this.playerRepository.save(player);
 
     // 플레이어 준비 상태 변경 이벤트 로그 추가
-    await this.addEventLogJob(gameId, 'player-ready-changed', {
-      playerName: player.name,
-      isReady,
-    });
+    await this.eventLogQueueService.addEventLogJob(
+      gameId,
+      'player-ready-changed',
+      {
+        playerName: player.name,
+        isReady,
+      },
+    );
 
     return this.getGame(gameId);
   }
@@ -353,7 +380,7 @@ export class GameService {
     game.nextPhase();
 
     // 페이즈 변경 이벤트 로그 추가
-    await this.addEventLogJob(gameId, 'phase-changed', {
+    await this.eventLogQueueService.addEventLogJob(gameId, 'phase-changed', {
       previousPhase,
       newPhase: game.currentPhase,
       previousDay,
@@ -367,7 +394,7 @@ export class GameService {
       game.finish();
 
       // 게임 종료 이벤트 로그 추가
-      await this.addEventLogJob(gameId, 'game-finished', {
+      await this.eventLogQueueService.addEventLogJob(gameId, 'game-finished', {
         winner: gameOverResult.winner,
         finalPhase: game.currentPhase,
         finalDay: game.dayCount,
@@ -378,23 +405,13 @@ export class GameService {
     return this.getGame(gameId);
   }
 
-  /**
-   * 게임 이벤트 로그를 큐에 추가합니다
-   */
-  private async addEventLogJob(
-    gameId: number,
-    eventType: string,
-    eventData?: Record<string, any>,
-  ): Promise<void> {
-    try {
-      await this.eventLogsQueue.add('append', {
-        gameId,
-        eventType,
-        eventData,
-      });
-    } catch (error) {
-      // 로깅만 하고 게임 로직에는 영향을 주지 않음
-      console.error(`Failed to add event log job: ${error.message}`);
-    }
+  async getGameHistory(gameId: number): Promise<string> {
+    const messages = await this.messageService.getMessagesByGameId(gameId);
+    const gameHistory = messages
+      .map(
+        (message: Message) => `\t- ${message.senderName}: ${message.content}`,
+      )
+      .join('\n');
+    return gameHistory;
   }
 }
