@@ -15,6 +15,6 @@ import { OpenRouterLlmService } from './providers/open-router.llm.service';
       inject: [OpenRouterLlmService],
     },
   ],
-  exports: [LLM_SERVICES],
+  exports: [LlmService, LLM_SERVICES],
 })
 export class LlmModule {}

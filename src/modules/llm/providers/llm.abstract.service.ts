@@ -4,4 +4,8 @@ export abstract class LlmAbstractService {
     prompt: string;
     message: string;
   }): Promise<string>;
+  abstract voteStatement(request: {
+    prompt: string;
+    message: string;
+  }): Promise<string>;
 }

@@ -17,7 +17,10 @@ export class OpenRouterLlmService extends LlmAbstractService {
     });
   }
 
-  async generate(request: { prompt: string; message: string }): Promise<string> {
+  async generate(request: {
+    prompt: string;
+    message: string;
+  }): Promise<string> {
     this.logger.log(
       `OpenRouter chat request: ${JSON.stringify(request, null, 2)}`,
     );
@@ -47,14 +50,50 @@ export class OpenRouterLlmService extends LlmAbstractService {
       },
     });
 
-    this.logger.log(
-      `OpenRouter chat response: ${JSON.stringify(response, null, 2)}`,
-    );
-
     const content = response.choices[0].message.content;
     const { job, response: llmResponse } = JSON.parse(content);
 
     this.logger.log(`${job}: ${llmResponse}`);
     return llmResponse;
+  }
+
+  async voteStatement(request: {
+    prompt: string;
+    message: string;
+  }): Promise<string> {
+    this.logger.log(
+      `OpenRouter vote statement request: ${JSON.stringify(request, null, 2)}`,
+    );
+    const { prompt, message } = request;
+
+    const response = await this.openRouterClient.chat.completions.create({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: prompt },
+        { role: 'user', content: message },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'response',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              figure: { type: 'number' },
+            },
+            required: ['figure'],
+            additionalProperties: false,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `OpenRouter vote statement response: ${JSON.stringify(response, null, 2)}`,
+    );
+
+    const content = response.choices[0].message.content;
+    return content;
   }
 }

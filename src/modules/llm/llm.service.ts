@@ -10,7 +10,7 @@ export class LlmService {
   constructor(
     @Inject(LLM_SERVICES) private readonly llmServices: LlmAbstractService[],
   ) {
-    llmServices.forEach((service) => {
+    this.llmServices.forEach((service) => {
       this.services.set(service.provider, service);
       this.logger.log(`LLM service '${service.provider}' registered.`);
     });
@@ -28,5 +28,19 @@ export class LlmService {
       throw new NotFoundException(`LLM provider '${provider}' not found.`);
     }
     return service.generate({ prompt, message });
+  }
+
+  async voteStatement(request: {
+    provider: string;
+    prompt: string;
+    message: string;
+  }): Promise<string> {
+    const { provider, prompt, message } = request;
+
+    const service = this.services.get(provider);
+    if (!service) {
+      throw new NotFoundException(`LLM provider '${provider}' not found.`);
+    }
+    return service.voteStatement({ prompt, message });
   }
 }
