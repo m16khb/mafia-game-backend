@@ -39,6 +39,10 @@ export class Player {
   @Column({ type: 'boolean', default: false })
   isAi: boolean;
 
+  @ApiProperty({ description: 'AI 페르소나 ID', required: false, example: 'detective-holmes' })
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  aiPersonaId?: string;
+
   @ApiProperty({
     description: '플레이어 역할',
     enum: ['citizen', 'mafia', 'police', 'doctor'],
@@ -99,5 +103,29 @@ export class Player {
 
   isCitizen(): boolean {
     return this.role === 'citizen';
+  }
+
+  /**
+   * AI 페르소나 ID를 설정합니다.
+   */
+  assignAiPersona(personaId: string): void {
+    if (!this.isAi) {
+      throw new Error('Cannot assign persona to non-AI player');
+    }
+    this.aiPersonaId = personaId;
+  }
+
+  /**
+   * AI 페르소나가 할당되어 있는지 확인합니다.
+   */
+  hasAiPersona(): boolean {
+    return this.isAi && !!this.aiPersonaId;
+  }
+
+  /**
+   * AI 페르소나 할당을 해제합니다.
+   */
+  clearAiPersona(): void {
+    this.aiPersonaId = undefined;
   }
 }
