@@ -14,7 +14,6 @@ import {
   PLAYER_REPOSITORY_TOKEN,
   MESSAGE_REPOSITORY_TOKEN,
 } from '@libs/repositories';
-import { AI_NAMES } from './ai-names.constants';
 import { Player } from '@/entities/player.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MessageService } from '../message/message.service';
@@ -22,6 +21,7 @@ import { ClsService } from 'nestjs-cls';
 import { Logger } from '@/libs/logger/logger.service';
 import { CreateGameRequestDto } from './dtos/game-request.dto';
 import { EventLogQueueService } from '../game-event/event-log-queue.service';
+import { AIPersonaService } from '../ai/services/ai-persona.service';
 
 @Injectable()
 export class GameService {
@@ -37,6 +37,7 @@ export class GameService {
     private readonly logger: Logger,
     private readonly cls: ClsService,
     private readonly eventLogQueueService: EventLogQueueService,
+    private readonly aiPersonaService: AIPersonaService,
   ) {
     this.logger.setContext(GameService.name);
   }
@@ -96,18 +97,15 @@ export class GameService {
       { players: true, messages: true },
     );
 
-    // --- AI Player Creation ---
+    // --- AI Player Creation with Personas ---
     const aiPlayersToCreate = 5;
-    const availableAiNames = [...AI_NAMES];
     const createdAiPlayers: Player[] = [];
 
+    // AI 플레이어들 생성 (일단 기본 이름으로)
     for (let i = 0; i < aiPlayersToCreate; i++) {
-      const randomIndex = Math.floor(Math.random() * availableAiNames.length);
-      const aiName = availableAiNames.splice(randomIndex, 1)[0];
-
       const aiPlayer = this.playerRepository.create({
-        name: aiName,
-        socketId: hostSocketId,
+        name: `AI Player ${i + 1}`, // 임시 이름, 페르소나 할당 후 변경될 예정
+        socketId: `ai_${savedGame.id}_${i + 1}`, // AI 전용 소켓 ID
         gameId: savedGame.id,
         isHost: false,
         isAlive: true,
@@ -119,7 +117,22 @@ export class GameService {
 
     await this.playerRepository.save(createdAiPlayers);
 
+    // AI 플레이어들에게 페르소나 할당
+    const personaAssignments = this.aiPersonaService.assignRandomPersonas(createdAiPlayers);
+    
+    // 페르소나 정보를 데이터베이스에 저장
+    for (const aiPlayer of createdAiPlayers) {
+      const persona = personaAssignments.get(aiPlayer.id);
+      if (persona) {
+        aiPlayer.assignAiPersona(persona.id);
+      }
+    }
+
+    // 업데이트된 AI 플레이어 정보 저장
+    await this.playerRepository.save(createdAiPlayers);
+
     for (const ai of createdAiPlayers) {
+      const persona = personaAssignments.get(ai.id);
       await this.eventLogQueueService.addEventLogJob(
         savedGame.id,
         'player-joined',
@@ -127,6 +140,8 @@ export class GameService {
           playerName: ai.name,
           isHost: false,
           isAi: true,
+          aiPersonaId: persona?.id,
+          aiPersonaName: persona?.name,
         },
       );
     }

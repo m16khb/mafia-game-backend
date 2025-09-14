@@ -14,6 +14,7 @@ import { MessageModule } from '../message/message.module';
 import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
 import { LlmModule } from '../llm/llm.module';
 import { EventLogQueueService } from '../game-event/event-log-queue.service';
+import { AIModule } from '../ai/ai.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EventLogQueueService } from '../game-event/event-log-queue.service';
     PlayerModule,
     MessageModule,
     LlmModule,
+    AIModule,
   ],
   controllers: [GameController],
   providers: [
