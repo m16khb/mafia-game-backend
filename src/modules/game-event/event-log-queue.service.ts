@@ -18,12 +18,19 @@ export class EventLogQueueService {
   ): Promise<void> {
     try {
       const requestContext = this.cls.get('request-context');
-      await this.eventLogsQueue.add('append', {
-        gameId,
-        eventType,
-        eventData,
-        requestContext,
-      });
+      await this.eventLogsQueue.add(
+        'append',
+        {
+          gameId,
+          eventType,
+          eventData,
+          requestContext,
+        },
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        },
+      );
     } catch (error) {
       console.error(`Failed to add event log job: ${error.message}`);
     }
