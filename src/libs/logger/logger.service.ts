@@ -39,7 +39,7 @@ export class Logger extends NestLogger {
       );
       contextPart = `${coloredRequestContext} `;
     }
-    
+
     const formattedMessage =
       typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
     super.log(`${contextPart}${formattedMessage}`);
