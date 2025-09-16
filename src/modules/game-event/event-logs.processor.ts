@@ -31,7 +31,7 @@ export class EventLogsProcessor extends WorkerHost {
   async process(job: Job<EventLogJobData, any, string>): Promise<void> {
     // CLS 컨텍스트를 새로 생성하여 request-context 설정
     const { requestContext } = job.data;
-    
+
     return this.cls.run(async () => {
       if (requestContext) {
         this.cls.set('request-context', requestContext);
