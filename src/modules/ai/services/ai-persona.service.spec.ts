@@ -91,7 +91,7 @@ describe('AI 페르소나 서비스', () => {
 
       const assignments = service.assignRandomPersonas(players);
       const assignedPersonas = Array.from(assignments.values());
-      const personaIds = assignedPersonas.map(p => p.id);
+      const personaIds = assignedPersonas.map((p) => p.id);
 
       expect(new Set(personaIds).size).toBe(personaIds.length);
     });
@@ -101,8 +101,8 @@ describe('AI 페르소나 서비스', () => {
      * 페르소나 재사용 로직이 올바르게 동작하는지 확인합니다.
      */
     it('페르소나보다 AI 플레이어가 더 많을 때도 처리해야 함', () => {
-      const players = Array.from({ length: 10 }, (_, i) => 
-        createMockPlayer(i + 1, `AI${i + 1}`, true)
+      const players = Array.from({ length: 10 }, (_, i) =>
+        createMockPlayer(i + 1, `AI${i + 1}`, true),
       );
 
       const assignments = service.assignRandomPersonas(players);
@@ -118,10 +118,10 @@ describe('AI 페르소나 서비스', () => {
      */
     it('플레이어 이름을 페르소나 이름으로 업데이트해야 함', () => {
       const players = [createMockPlayer(1, 'AI1', true)];
-      
+
       service.assignRandomPersonas(players);
-      
-      expect(AI_PERSONAS.map(p => p.name)).toContain(players[0].name);
+
+      expect(AI_PERSONAS.map((p) => p.name)).toContain(players[0].name);
     });
   });
 
@@ -133,9 +133,9 @@ describe('AI 페르소나 서비스', () => {
     it('should return assigned persona for a player from memory', () => {
       const players = [createMockPlayer(1, 'AI1', true)];
       const assignments = service.assignRandomPersonas(players);
-      
+
       const persona = service.getPersonaFromMemory(1);
-      
+
       expect(persona).toEqual(assignments.get(1));
     });
 
@@ -144,7 +144,7 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return undefined for non-assigned player', () => {
       const persona = service.getPersonaFromMemory(999);
-      
+
       expect(persona).toBeUndefined();
     });
   });
@@ -157,9 +157,9 @@ describe('AI 페르소나 서비스', () => {
     it('should return assigned persona for a player from memory', async () => {
       const players = [createMockPlayer(1, 'AI1', true)];
       const assignments = service.assignRandomPersonas(players);
-      
+
       const persona = await service.getPersona(1);
-      
+
       expect(persona).toEqual(assignments.get(1));
     });
 
@@ -169,9 +169,9 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return undefined for non-assigned player', async () => {
       mockPlayerRepository.findById.mockResolvedValue(null);
-      
+
       const persona = await service.getPersona(999);
-      
+
       expect(persona).toBeUndefined();
     });
 
@@ -181,11 +181,11 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should fetch persona from database if not in memory', async () => {
       const mockPlayer = createMockPlayer(1, 'AI1', true);
-      mockPlayer.aiPersonaId = 'detective-holmes';
+      mockPlayer.aiPersonaId = 1;
       mockPlayerRepository.findById.mockResolvedValue(mockPlayer);
-      
+
       const persona = await service.getPersona(1);
-      
+
       expect(persona).toBeDefined();
       expect(persona?.id).toBe('detective-holmes');
       expect(mockPlayerRepository.findById).toHaveBeenCalledWith(1);
@@ -198,7 +198,7 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return persona by ID', () => {
       const persona = service.getPersonaById('detective-holmes');
-      
+
       expect(persona).toBeDefined();
       expect(persona?.id).toBe('detective-holmes');
       expect(persona?.name).toBe('홈즈');
@@ -209,7 +209,7 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return undefined for invalid ID', () => {
       const persona = service.getPersonaById('invalid-id');
-      
+
       expect(persona).toBeUndefined();
     });
   });
@@ -220,7 +220,7 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return all available personas', () => {
       const personas = service.getAllPersonas();
-      
+
       expect(personas).toHaveLength(AI_PERSONAS.length);
       expect(personas).toEqual(AI_PERSONAS);
     });
@@ -231,7 +231,7 @@ describe('AI 페르소나 서비스', () => {
     it('should return a copy of personas array', () => {
       const personas = service.getAllPersonas();
       personas.push({} as any);
-      
+
       expect(service.getAllPersonas()).toHaveLength(AI_PERSONAS.length);
     });
   });
@@ -243,9 +243,9 @@ describe('AI 페르소나 서비스', () => {
     it('should remove existing assignment', () => {
       const players = [createMockPlayer(1, 'AI1', true)];
       service.assignRandomPersonas(players);
-      
+
       const removed = service.removePersonaAssignment(1);
-      
+
       expect(removed).toBe(true);
       expect(service.getPersonaFromMemory(1)).toBeUndefined();
     });
@@ -255,7 +255,7 @@ describe('AI 페르소나 서비스', () => {
      */
     it('should return false for non-existing assignment', () => {
       const removed = service.removePersonaAssignment(999);
-      
+
       expect(removed).toBe(false);
     });
   });
@@ -265,9 +265,11 @@ describe('AI 페르소나 서비스', () => {
      * 분석적 성향이 높은 페르소나의 성격을 올바르게 설명하는지 테스트합니다.
      */
     it('should describe high analytical personality', () => {
-      const holmesPersona = AI_PERSONAS.find(p => p.id === 'detective-holmes')!;
+      const holmesPersona = AI_PERSONAS.find(
+        (p) => p.id === 'detective-holmes',
+      )!;
       const description = service.describePersonality(holmesPersona);
-      
+
       expect(description).toContain('분석적');
     });
 
@@ -275,9 +277,11 @@ describe('AI 페르소나 서비스', () => {
      * 공격적 성향이 높은 페르소나의 성격을 올바르게 설명하는지 테스트합니다.
      */
     it('should describe aggressive personality', () => {
-      const aggressivePersona = AI_PERSONAS.find(p => p.personality.aggression > 0.7)!;
+      const aggressivePersona = AI_PERSONAS.find(
+        (p) => p.personality.aggression > 0.7,
+      )!;
       const description = service.describePersonality(aggressivePersona);
-      
+
       expect(description).toContain('공격적');
     });
 
@@ -294,11 +298,11 @@ describe('AI 페르소나 서비스', () => {
           leadership: 0.5,
           analytical: 0.5,
           emotional: 0.5,
-        }
+        },
       };
-      
+
       const description = service.describePersonality(balancedPersona);
-      
+
       expect(description).toBe('평범함');
     });
   });
@@ -311,7 +315,7 @@ describe('AI 페르소나 서비스', () => {
     it('should describe play style components', () => {
       const persona = AI_PERSONAS[0];
       const description = service.describePlayStyle(persona);
-      
+
       expect(description).toContain('투표성향:');
       expect(description).toContain('대화수준:');
       expect(description).toContain('의심임계값:');
@@ -322,9 +326,11 @@ describe('AI 페르소나 서비스', () => {
      * 투표 패턴이 올바른 한글로 번역되는지 테스트합니다.
      */
     it('should translate voting patterns correctly', () => {
-      const analyticalPersona = AI_PERSONAS.find(p => p.playStyle.votingPattern === 'analytical')!;
+      const analyticalPersona = AI_PERSONAS.find(
+        (p) => p.playStyle.votingPattern === 'analytical',
+      )!;
       const description = service.describePlayStyle(analyticalPersona);
-      
+
       expect(description).toContain('분석적');
     });
   });
@@ -340,9 +346,9 @@ describe('AI 페르소나 서비스', () => {
         createMockPlayer(2, 'AI2', true),
       ];
       service.assignRandomPersonas(players);
-      
+
       service.clearAllAssignments();
-      
+
       expect(service.getPersonaFromMemory(1)).toBeUndefined();
       expect(service.getPersonaFromMemory(2)).toBeUndefined();
     });

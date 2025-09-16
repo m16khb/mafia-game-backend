@@ -37,7 +37,7 @@ export class PromptBuilderService {
 ## 🎮 게임 상황 정보
 - **현재 페이즈**: ${this.translatePhase(phase)}
 - **게임 일차**: ${game.dayCount}일차
-- **생존자 수**: ${game.players.filter(p => p.isAlive).length}명 / ${game.players.length}명
+- **생존자 수**: ${game.players.filter((p) => p.isAlive).length}명 / ${game.players.length}명
 - **당신의 역할**: ${this.translateRole(player.role)}
 - **당신의 정체성**: ${persona.name}
 - **현재 시간**: ${new Date().toLocaleTimeString('ko-KR')}
@@ -49,9 +49,10 @@ ${this.describePersonality(persona)}
 ${this.buildGameProgressSummary(game, player)}
 
 ## 🔍 최근 주요 이벤트
-${recentEvents.length > 0 
-  ? recentEvents.map(event => `- ${event.description}`).join('\n')
-  : '- 특별한 이벤트가 없었습니다.'
+${
+  recentEvents.length > 0
+    ? recentEvents.map((event) => `- ${event.description}`).join('\n')
+    : '- 특별한 이벤트가 없었습니다.'
 }
 
 ## 🎯 현재 상황 분석
@@ -75,7 +76,13 @@ ${this.getActionGuidelines(phase, player.role, persona)}
     context: ChatPromptContext,
     options: PromptTemplateOptions = {},
   ): string {
-    const { gameState, conversationContext, recentChat, referencedMessage, chatTrigger } = context;
+    const {
+      gameState,
+      conversationContext,
+      recentChat,
+      referencedMessage,
+      chatTrigger,
+    } = context;
     const basePrompt = this.buildGameStatePrompt(gameState, options);
 
     return `
@@ -87,15 +94,23 @@ ${basePrompt}
 - **채팅 생성 이유**: ${this.translateChatTrigger(chatTrigger)}
 
 ## 📝 최근 채팅 내역
-${recentChat.length > 0 
-  ? recentChat.slice(-5).map(msg => `${msg.senderName}: ${msg.content}`).join('\n')
-  : '- 아직 대화가 시작되지 않았습니다.'
+${
+  recentChat.length > 0
+    ? recentChat
+        .slice(-5)
+        .map((msg) => `${msg.senderName}: ${msg.content}`)
+        .join('\n')
+    : '- 아직 대화가 시작되지 않았습니다.'
 }
 
-${referencedMessage ? `
+${
+  referencedMessage
+    ? `
 ## 💭 응답할 메시지
 ${referencedMessage.senderName}: "${referencedMessage.content}"
-` : ''}
+`
+    : ''
+}
 
 ## 🎯 채팅 생성 지침
 ${this.getChatGuidelines(chatTrigger, gameState.persona, conversationContext)}
@@ -105,7 +120,9 @@ ${this.getChatGuidelines(chatTrigger, gameState.persona, conversationContext)}
 - 톤: ${this.getPersonalityChatTone(gameState.persona)}
 - 감정: ${options.emotionalIntensity || 'medium'} 강도
 
-${options.requireJsonResponse ? `
+${
+  options.requireJsonResponse
+    ? `
 JSON 형식으로 응답하세요:
 {
   "job": "채팅 응답",
@@ -113,7 +130,9 @@ JSON 형식으로 응답하세요:
   "emotion": "현재 감정 상태",
   "confidence": 0.8
 }
-` : '자연스러운 채팅 메시지로 응답하세요.'}
+`
+    : '자연스러운 채팅 메시지로 응답하세요.'
+}
     `.trim();
   }
 
@@ -126,7 +145,13 @@ JSON 형식으로 응답하세요:
     context: VotePromptContext,
     options: PromptTemplateOptions = {},
   ): string {
-    const { gameState, voteCandidates, currentVotes, suspicionData, timeRemaining } = context;
+    const {
+      gameState,
+      voteCandidates,
+      currentVotes,
+      suspicionData,
+      timeRemaining,
+    } = context;
     const basePrompt = this.buildGameStatePrompt(gameState, options);
 
     return `
@@ -134,7 +159,7 @@ ${basePrompt}
 
 ## 🗳️ 투표 상황
 - **남은 시간**: ${timeRemaining}초
-- **투표 대상자**: ${voteCandidates.map(p => p.name).join(', ')}
+- **투표 대상자**: ${voteCandidates.map((p) => p.name).join(', ')}
 - **현재 투표 현황**: ${this.buildVoteStatusSummary(currentVotes, gameState.game.players)}
 
 ## 🤔 의심도 분석
@@ -144,9 +169,15 @@ ${this.buildSuspicionAnalysis(voteCandidates, suspicionData, gameState.persona)}
 ${this.getVotingStrategy(gameState.player.role, gameState.persona)}
 
 ## 📊 후보자별 분석
-${voteCandidates.map(candidate => 
-  this.analyzeCandidateForVoting(candidate, gameState, suspicionData.get(candidate.id) || 0)
-).join('\n\n')}
+${voteCandidates
+  .map((candidate) =>
+    this.analyzeCandidateForVoting(
+      candidate,
+      gameState,
+      suspicionData.get(candidate.id) || 0,
+    ),
+  )
+  .join('\n\n')}
 
 **투표 결정 요청**:
 위 정보를 종합하여 가장 적절한 투표 대상을 선택하고, 그 이유를 설명하세요.
@@ -168,7 +199,7 @@ JSON 형식:
    */
   private describePersonality(persona: AIPersona): string {
     const traits = [];
-    
+
     if (persona.personality.analytical > 0.7) {
       traits.push('논리적이고 분석적인 사고를 선호');
     }
@@ -202,19 +233,27 @@ JSON 형식:
   /**
    * 현재 게임 상황을 분석합니다.
    */
-  private analyzeCurrentSituation(game: Game, player: Player, persona: AIPersona): string {
+  private analyzeCurrentSituation(
+    game: Game,
+    player: Player,
+    persona: AIPersona,
+  ): string {
     const analysis = [];
-    
-    const alivePlayers = game.players.filter(p => p.isAlive);
-    const mafiaCount = alivePlayers.filter(p => p.role === 'mafia').length;
-    const citizenCount = alivePlayers.filter(p => p.role !== 'mafia').length;
+
+    const alivePlayers = game.players.filter((p) => p.isAlive);
+    const mafiaCount = alivePlayers.filter((p) => p.role === 'mafia').length;
+    const citizenCount = alivePlayers.filter((p) => p.role !== 'mafia').length;
 
     analysis.push(`현재 마피아 ${mafiaCount}명, 시민 ${citizenCount}명이 생존`);
-    
+
     if (player.role === 'mafia') {
-      const otherMafia = alivePlayers.filter(p => p.role === 'mafia' && p.id !== player.id);
+      const otherMafia = alivePlayers.filter(
+        (p) => p.role === 'mafia' && p.id !== player.id,
+      );
       if (otherMafia.length > 0) {
-        analysis.push(`동료 마피아: ${otherMafia.map(p => p.name).join(', ')}`);
+        analysis.push(
+          `동료 마피아: ${otherMafia.map((p) => p.name).join(', ')}`,
+        );
       }
     }
 
@@ -286,16 +325,18 @@ JSON 형식:
    */
   private buildGameProgressSummary(game: Game, player: Player): string {
     const summary = [];
-    
+
     if (game.dayCount === 1) {
       summary.push('게임이 시작되었습니다.');
     } else {
       summary.push(`${game.dayCount}일차가 진행 중입니다.`);
     }
 
-    const deadPlayers = game.players.filter(p => !p.isAlive);
+    const deadPlayers = game.players.filter((p) => !p.isAlive);
     if (deadPlayers.length > 0) {
-      summary.push(`제거된 플레이어: ${deadPlayers.map(p => `${p.name}(${this.translateRole(p.role)})`).join(', ')}`);
+      summary.push(
+        `제거된 플레이어: ${deadPlayers.map((p) => `${p.name}(${this.translateRole(p.role)})`).join(', ')}`,
+      );
     }
 
     return summary.join(' ');
@@ -313,7 +354,9 @@ JSON 형식:
 
     switch (trigger) {
       case 'phase_start':
-        guidelines.push('새로운 페이즈가 시작되었을 때의 자연스러운 반응을 보이세요');
+        guidelines.push(
+          '새로운 페이즈가 시작되었을 때의 자연스러운 반응을 보이세요',
+        );
         break;
       case 'response_to_message':
         guidelines.push('상대방의 메시지에 적절히 반응하세요');
@@ -457,30 +500,33 @@ JSON 형식:
 
   private getPersonalityChatTone(persona: AIPersona): string {
     const tones = [];
-    
+
     if (persona.communicationStyle.formality > 0.6) {
       tones.push('정중한');
     } else {
       tones.push('친근한');
     }
-    
+
     if (persona.communicationStyle.directness > 0.6) {
       tones.push('직설적인');
     } else {
       tones.push('완곡한');
     }
-    
+
     return tones.join(', ') + ' 톤';
   }
 
-  private buildVoteStatusSummary(currentVotes: any[], players: Player[]): string {
+  private buildVoteStatusSummary(
+    currentVotes: any[],
+    players: Player[],
+  ): string {
     if (currentVotes.length === 0) {
       return '아직 투표가 시작되지 않았습니다.';
     }
 
     const voteCounts = new Map();
-    currentVotes.forEach(vote => {
-      const target = players.find(p => p.id === vote.targetId);
+    currentVotes.forEach((vote) => {
+      const target = players.find((p) => p.id === vote.targetId);
       if (target) {
         voteCounts.set(target.name, (voteCounts.get(target.name) || 0) + 1);
       }
@@ -497,7 +543,7 @@ JSON 형식:
     persona: AIPersona,
   ): string {
     return candidates
-      .map(candidate => {
+      .map((candidate) => {
         const suspicionLevel = suspicionData.get(candidate.id) || 0;
         const suspicionText = this.getSuspicionLevelText(suspicionLevel);
         return `- ${candidate.name}: ${suspicionText} (${Math.round(suspicionLevel * 100)}%)`;

@@ -127,14 +127,14 @@ describe('AI 채팅 서비스', () => {
 
       // AI 플레이어 수만큼 페르소나를 조회해야 함
       expect(aiPersonaService.getPersona).toHaveBeenCalledTimes(2);
-      
+
       // 각 AI 플레이어에 대해 채팅 결정을 내려야 함
-      expect(chatTimingService.shouldInitiateChatOnPhaseStart).toHaveBeenCalledTimes(2);
-      expect(chatTimingService.shouldInitiateChatOnPhaseStart).toHaveBeenCalledWith(
-        AI_PERSONAS[0],
-        phase,
-        game,
-      );
+      expect(
+        chatTimingService.shouldInitiateChatOnPhaseStart,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        chatTimingService.shouldInitiateChatOnPhaseStart,
+      ).toHaveBeenCalledWith(AI_PERSONAS[0], phase, game);
     });
 
     /**
@@ -160,8 +160,12 @@ describe('AI 채팅 서비스', () => {
       await service.processGamePhaseStart(game, phase);
 
       // 페르소나가 있는 플레이어에 대해서만 채팅 결정
-      expect(chatTimingService.shouldInitiateChatOnPhaseStart).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith('No persona found for AI player 1');
+      expect(
+        chatTimingService.shouldInitiateChatOnPhaseStart,
+      ).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No persona found for AI player 1',
+      );
     });
 
     /**
@@ -172,7 +176,7 @@ describe('AI 채팅 서비스', () => {
       const game = createMockGameWithAI();
       // 첫 번째 AI 플레이어를 사망시킴
       game.players[0].isAlive = false;
-      
+
       const phase: GamePhase = 'day';
 
       aiPersonaService.getPersona.mockResolvedValue(AI_PERSONAS[0]);
@@ -188,7 +192,9 @@ describe('AI 채팅 서비스', () => {
 
       // 살아있는 AI 플레이어 1명에 대해서만 호출
       expect(aiPersonaService.getPersona).toHaveBeenCalledTimes(1);
-      expect(chatTimingService.shouldInitiateChatOnPhaseStart).toHaveBeenCalledTimes(1);
+      expect(
+        chatTimingService.shouldInitiateChatOnPhaseStart,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -199,7 +205,11 @@ describe('AI 채팅 서비스', () => {
      */
     it('플레이어 메시지에 AI가 응답을 처리해야 함', async () => {
       const game = createMockGameWithAI();
-      const originalMessage = createMockMessage(3, 'Human1', '안녕하세요 모두!'); // 인간 플레이어 메시지
+      const originalMessage = createMockMessage(
+        3,
+        'Human1',
+        '안녕하세요 모두!',
+      ); // 인간 플레이어 메시지
 
       aiPersonaService.getPersona.mockResolvedValue(AI_PERSONAS[0]);
       chatTimingService.shouldRespondToMessage
@@ -280,7 +290,9 @@ describe('AI 채팅 서비스', () => {
 
       // 진행 중인 게임에서만 처리
       expect(aiPersonaService.getPersona).toHaveBeenCalledTimes(2); // playingGame의 AI 2명
-      expect(chatTimingService.shouldInitiateSpontaneousChat).toHaveBeenCalledTimes(2);
+      expect(
+        chatTimingService.shouldInitiateSpontaneousChat,
+      ).toHaveBeenCalledTimes(2);
     });
 
     /**
@@ -302,7 +314,7 @@ describe('AI 채팅 서비스', () => {
 
       // 첫 번째 호출 - 채팅 예약됨
       await service.processSpontaneousChats(game);
-      
+
       // 두 번째 호출 - 이미 예약된 채팅이 있으므로 건너뜀
       await service.processSpontaneousChats(game);
 
@@ -320,7 +332,7 @@ describe('AI 채팅 서비스', () => {
      */
     it('채팅 내용을 생성하고 전송해야 함', async () => {
       const game = createMockGameWithAI();
-      const aiPlayer = game.players.find(p => p.isAi)!;
+      const aiPlayer = game.players.find((p) => p.isAi)!;
 
       aiPersonaService.getPersona.mockResolvedValue(AI_PERSONAS[0]);
       chatTimingService.shouldInitiateChatOnPhaseStart.mockReturnValue({
@@ -333,12 +345,12 @@ describe('AI 채팅 서비스', () => {
 
       // 채팅 생성 및 전송 대기
       await service.processGamePhaseStart(game, 'day');
-      
+
       // 짧은 대기 후 이벤트 발생 확인
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       expect(mockLogger.log).toHaveBeenCalledWith(
-        expect.stringContaining('AI Player')
+        expect.stringContaining('AI Player'),
       );
     });
 
@@ -360,7 +372,11 @@ describe('AI 채팅 서비스', () => {
      */
     it('메시지로 대화 상태를 업데이트해야 함', async () => {
       const game = createMockGameWithAI();
-      const suspiciousMessage = createMockMessage(3, 'Human1', '누군가 의심스럽네요');
+      const suspiciousMessage = createMockMessage(
+        3,
+        'Human1',
+        '누군가 의심스럽네요',
+      );
 
       aiPersonaService.getPersona.mockResolvedValue(AI_PERSONAS[0]);
       chatTimingService.shouldRespondToMessage.mockReturnValue({
@@ -406,7 +422,9 @@ describe('AI 채팅 서비스', () => {
 
       // 투표 관련 주제로 설정되었는지 확인은 내부 구현 디테일이므로
       // 여기서는 단순히 메서드 호출 확인
-      expect(chatTimingService.shouldInitiateChatOnPhaseStart).toHaveBeenCalled();
+      expect(
+        chatTimingService.shouldInitiateChatOnPhaseStart,
+      ).toHaveBeenCalled();
     });
   });
 
@@ -421,7 +439,7 @@ describe('AI 채팅 서비스', () => {
       service.cleanup(gameId);
 
       expect(mockLogger.log).toHaveBeenCalledWith(
-        `Cleaned up AI chat service for game ${gameId}`
+        `Cleaned up AI chat service for game ${gameId}`,
       );
     });
   });
@@ -453,7 +471,7 @@ describe('AI 채팅 서비스', () => {
       expect(aiPersonaService.getPersona).toHaveBeenCalledTimes(2);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),
-        'Failed to process phase start chat for player 1'
+        'Failed to process phase start chat for player 1',
       );
     });
   });
@@ -478,7 +496,12 @@ function createMockGameWithAI(): Game {
   return game;
 }
 
-function createMockAIPlayer(id: number, name: string, role: any, isAlive: boolean): Player {
+function createMockAIPlayer(
+  id: number,
+  name: string,
+  role: any,
+  isAlive: boolean,
+): Player {
   const player = new Player();
   player.id = id;
   player.name = name;
@@ -488,7 +511,12 @@ function createMockAIPlayer(id: number, name: string, role: any, isAlive: boolea
   return player;
 }
 
-function createMockHumanPlayer(id: number, name: string, role: any, isAlive: boolean): Player {
+function createMockHumanPlayer(
+  id: number,
+  name: string,
+  role: any,
+  isAlive: boolean,
+): Player {
   const player = new Player();
   player.id = id;
   player.name = name;
@@ -498,7 +526,11 @@ function createMockHumanPlayer(id: number, name: string, role: any, isAlive: boo
   return player;
 }
 
-function createMockMessage(senderId: number, senderName: string, content: string): Message {
+function createMockMessage(
+  senderId: number,
+  senderName: string,
+  content: string,
+): Message {
   const message = new Message();
   message.id = Date.now();
   message.senderId = senderId;

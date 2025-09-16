@@ -23,7 +23,7 @@ export interface BehaviorAction {
 
 export type BehaviorActionType =
   | 'initiate_discussion'
-  | 'respond_to_suspicion' 
+  | 'respond_to_suspicion'
   | 'cast_suspicion'
   | 'defend_player'
   | 'share_information'
@@ -38,7 +38,12 @@ export type BehaviorActionType =
  * 행동 조건
  */
 export interface BehaviorCondition {
-  type: 'player_count' | 'day_count' | 'suspicion_level' | 'role_revealed' | 'team_status';
+  type:
+    | 'player_count'
+    | 'day_count'
+    | 'suspicion_level'
+    | 'role_revealed'
+    | 'team_status';
   operator: '>' | '<' | '>=' | '<=' | '==' | '!=';
   value: number | string | boolean;
 }

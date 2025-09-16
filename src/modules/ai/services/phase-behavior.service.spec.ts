@@ -10,7 +10,10 @@ describe('페이즈별 행동 패턴 서비스', () => {
   let service: PhaseBehaviorService;
   let mockLogger: jest.Mocked<Logger>;
 
-  const createMockGame = (phase: GamePhase = 'day', dayCount: number = 1): Game => {
+  const createMockGame = (
+    phase: GamePhase = 'day',
+    dayCount: number = 1,
+  ): Game => {
     const game = new Game();
     game.id = 1;
     game.currentPhase = phase;
@@ -20,7 +23,10 @@ describe('페이즈별 행동 패턴 서비스', () => {
     return game;
   };
 
-  const createMockPlayer = (role: GameRole = 'citizen', isAI: boolean = true): Player => {
+  const createMockPlayer = (
+    role: GameRole = 'citizen',
+    isAI: boolean = true,
+  ): Player => {
     const player = new Player();
     player.id = Math.floor(Math.random() * 1000);
     player.name = `TestPlayer${player.id}`;
@@ -30,7 +36,9 @@ describe('페이즈별 행동 패턴 서비스', () => {
     return player;
   };
 
-  const createMockPersona = (personalityOverrides?: Partial<PersonalityTraits>): AIPersona => {
+  const createMockPersona = (
+    personalityOverrides?: Partial<PersonalityTraits>,
+  ): AIPersona => {
     return {
       id: 'test-persona',
       name: 'TestPersona',
@@ -41,27 +49,27 @@ describe('페이즈별 행동 패턴 서비스', () => {
         leadership: 0.5,
         analytical: 0.5,
         emotional: 0.5,
-        ...personalityOverrides
+        ...personalityOverrides,
       },
       playStyle: {
         votingPattern: 'analytical',
         discussionLevel: 'active',
         suspicionThreshold: 0.5,
-        teamplayPreference: 0.5
+        teamplayPreference: 0.5,
       },
       communicationStyle: {
         formality: 0.5,
         verbosity: 0.5,
         directness: 0.5,
         responsiveness: 0.5,
-        quickness: 0.5
+        quickness: 0.5,
       },
       suspicionBehavior: {
         investigateFrequency: 0.5,
         shareFindings: 0.5,
         accusationCaution: 0.5,
-        responseToAccusation: 0.5
-      }
+        responseToAccusation: 0.5,
+      },
     };
   };
 
@@ -72,7 +80,7 @@ describe('페이즈별 행동 패턴 서비스', () => {
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn(),
-      verbose: jest.fn()
+      verbose: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -80,9 +88,9 @@ describe('페이즈별 행동 패턴 서비스', () => {
         PhaseBehaviorService,
         {
           provide: Logger,
-          useValue: mockLoggerInstance
-        }
-      ]
+          useValue: mockLoggerInstance,
+        },
+      ],
     }).compile();
 
     service = module.get<PhaseBehaviorService>(PhaseBehaviorService);
@@ -107,16 +115,23 @@ describe('페이즈별 행동 패턴 서비스', () => {
       game.players = [mafiaPlayer];
       jest.spyOn(game, 'getAlivePlayers').mockReturnValue([mafiaPlayer]);
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       // 결과가 정의되어야 하고 배열이어야 함 (확률적 행동으로 빈 배열일 수 있음)
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
       // 행동이 실행된 경우에만 executed가 true인지 확인
       if (results.length > 0) {
-        expect(results.every(r => r.executed)).toBe(true);
+        expect(results.every((r) => r.executed)).toBe(true);
       }
-      expect(mockLogger.log).toHaveBeenCalledWith('Executing phase start behaviors for day');
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'Executing phase start behaviors for day',
+      );
     });
 
     it('시민 플레이어가 낮에 적절한 행동을 수행해야 함', async () => {
@@ -131,17 +146,26 @@ describe('페이즈별 행동 패턴 서비스', () => {
       // 여러 번 시도해서 최소 한 번은 행동이 실행되는지 확인
       let hasExpectedAction = false;
       const trials = 10;
-      
+
       for (let i = 0; i < trials && !hasExpectedAction; i++) {
-        const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
-        const actionTypes = results.map(r => r.action.type);
-        const expectedCitizenActions: BehaviorActionType[] = ['ask_question', 'share_information', 'initiate_discussion'];
-        
-        if (actionTypes.some(type => expectedCitizenActions.includes(type))) {
+        const results = await service.executePhaseStartBehaviors(
+          game,
+          'day',
+          aiPlayers,
+          personaMap,
+        );
+        const actionTypes = results.map((r) => r.action.type);
+        const expectedCitizenActions: BehaviorActionType[] = [
+          'ask_question',
+          'share_information',
+          'initiate_discussion',
+        ];
+
+        if (actionTypes.some((type) => expectedCitizenActions.includes(type))) {
           hasExpectedAction = true;
         }
       }
-      
+
       expect(hasExpectedAction).toBe(true);
     });
 
@@ -154,12 +178,22 @@ describe('페이즈별 행동 패턴 서비스', () => {
       game.players = [policePlayer];
       jest.spyOn(game, 'getAlivePlayers').mockReturnValue([policePlayer]);
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
-      const actionTypes = results.map(r => r.action.type);
-      const expectedPoliceActions: BehaviorActionType[] = ['role_hint', 'cast_suspicion'];
-      
-      expect(actionTypes.some(type => expectedPoliceActions.includes(type))).toBe(true);
+      const actionTypes = results.map((r) => r.action.type);
+      const expectedPoliceActions: BehaviorActionType[] = [
+        'role_hint',
+        'cast_suspicion',
+      ];
+
+      expect(
+        actionTypes.some((type) => expectedPoliceActions.includes(type)),
+      ).toBe(true);
     });
 
     it('의사 플레이어가 신중한 행동을 수행해야 함', async () => {
@@ -174,17 +208,25 @@ describe('페이즈별 행동 패턴 서비스', () => {
       // 여러 번 시도해서 최소 한 번은 행동이 실행되는지 확인
       let hasExpectedAction = false;
       const trials = 10;
-      
+
       for (let i = 0; i < trials && !hasExpectedAction; i++) {
-        const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
-        const actionTypes = results.map(r => r.action.type);
-        const expectedDoctorActions: BehaviorActionType[] = ['silence_strategy', 'defend_player'];
-        
-        if (actionTypes.some(type => expectedDoctorActions.includes(type))) {
+        const results = await service.executePhaseStartBehaviors(
+          game,
+          'day',
+          aiPlayers,
+          personaMap,
+        );
+        const actionTypes = results.map((r) => r.action.type);
+        const expectedDoctorActions: BehaviorActionType[] = [
+          'silence_strategy',
+          'defend_player',
+        ];
+
+        if (actionTypes.some((type) => expectedDoctorActions.includes(type))) {
           hasExpectedAction = true;
         }
       }
-      
+
       expect(hasExpectedAction).toBe(true);
     });
 
@@ -194,7 +236,12 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const aiPlayers = [player];
       const personaMap = new Map(); // 빈 맵
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       expect(results).toHaveLength(0);
     });
@@ -210,10 +257,18 @@ describe('페이즈별 행동 패턴 서비스', () => {
       // executePhaseTransition은 비동기적으로 실행되므로 직접 테스트하기 어려움
       // 대신 메서드가 호출되고 에러가 발생하지 않는지만 확인
       await expect(
-        service.executePhaseTransition(game, 'night', 'day', aiPlayers, personaMap)
+        service.executePhaseTransition(
+          game,
+          'night',
+          'day',
+          aiPlayers,
+          personaMap,
+        ),
       ).resolves.not.toThrow();
 
-      expect(mockLogger.log).toHaveBeenCalledWith('Executing phase transition: night -> day');
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'Executing phase transition: night -> day',
+      );
     });
 
     it('낮에서 투표로 전환 시 투표 설명 행동을 실행해야 함', async () => {
@@ -223,10 +278,18 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const personaMap = new Map([[player.id, createMockPersona()]]);
 
       await expect(
-        service.executePhaseTransition(game, 'day', 'voting', aiPlayers, personaMap)
+        service.executePhaseTransition(
+          game,
+          'day',
+          'voting',
+          aiPlayers,
+          personaMap,
+        ),
       ).resolves.not.toThrow();
 
-      expect(mockLogger.log).toHaveBeenCalledWith('Executing phase transition: day -> voting');
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'Executing phase transition: day -> voting',
+      );
     });
   });
 
@@ -238,10 +301,17 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const personaMap = new Map([[mafiaPlayer.id, createMockPersona()]]);
 
       await expect(
-        service.executeSituationResponse('player_eliminated', game, aiPlayers, personaMap)
+        service.executeSituationResponse(
+          'player_eliminated',
+          game,
+          aiPlayers,
+          personaMap,
+        ),
       ).resolves.not.toThrow();
 
-      expect(mockLogger.log).toHaveBeenCalledWith('Executing situation response for: player_eliminated');
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'Executing situation response for: player_eliminated',
+      );
     });
 
     it('플레이어 제거 상황에서 시민이 정보 공유 행동을 수행해야 함', async () => {
@@ -251,10 +321,17 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const personaMap = new Map([[citizenPlayer.id, createMockPersona()]]);
 
       await expect(
-        service.executeSituationResponse('player_eliminated', game, aiPlayers, personaMap)
+        service.executeSituationResponse(
+          'player_eliminated',
+          game,
+          aiPlayers,
+          personaMap,
+        ),
       ).resolves.not.toThrow();
 
-      expect(mockLogger.log).toHaveBeenCalledWith('Executing situation response for: player_eliminated');
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'Executing situation response for: player_eliminated',
+      );
     });
   });
 
@@ -274,8 +351,15 @@ describe('페이즈별 행동 패턴 서비스', () => {
       let suspicionCount = 0;
 
       for (let i = 0; i < trials; i++) {
-        const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
-        const hasSuspicionAction = results.some(r => r.action.type === 'cast_suspicion');
+        const results = await service.executePhaseStartBehaviors(
+          game,
+          'day',
+          aiPlayers,
+          personaMap,
+        );
+        const hasSuspicionAction = results.some(
+          (r) => r.action.type === 'cast_suspicion',
+        );
         if (hasSuspicionAction) suspicionCount++;
       }
 
@@ -293,11 +377,17 @@ describe('페이즈별 행동 패턴 서비스', () => {
       game.players = [cautiousPlayer];
       jest.spyOn(game, 'getAlivePlayers').mockReturnValue([cautiousPlayer]);
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       // 신중한 플레이어의 평균 지연 시간이 더 길어야 함 (기본값보다는 길어야 함)
       if (results.length > 0) {
-        const avgDelay = results.reduce((sum, r) => sum + r.delayUsed, 0) / results.length;
+        const avgDelay =
+          results.reduce((sum, r) => sum + r.delayUsed, 0) / results.length;
         expect(avgDelay).toBeGreaterThan(5000); // 5초 이상 (더 현실적인 기대값)
       }
     });
@@ -313,7 +403,12 @@ describe('페이즈별 행동 패턴 서비스', () => {
       game.players = [player];
       jest.spyOn(game, 'getAlivePlayers').mockReturnValue([player]);
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       // 후반부에는 더 많은 행동이 실행되어야 함
       expect(results.length).toBeGreaterThanOrEqual(1);
@@ -327,9 +422,16 @@ describe('페이즈별 행동 패턴 서비스', () => {
 
       game.players = [player];
       // 살아있는 플레이어가 4명 이하인 상황 시뮬레이션
-      jest.spyOn(game, 'getAlivePlayers').mockReturnValue([player, player, player, player]);
+      jest
+        .spyOn(game, 'getAlivePlayers')
+        .mockReturnValue([player, player, player, player]);
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       // 플레이어가 적을 때도 적절한 행동을 수행해야 함
       expect(results).toBeDefined();
@@ -344,7 +446,12 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const personaMap = new Map([[player.id, createMockPersona()]]);
 
       await expect(
-        service.executePhaseStartBehaviors(game, 'result' as GamePhase, aiPlayers, personaMap)
+        service.executePhaseStartBehaviors(
+          game,
+          'result' as GamePhase,
+          aiPlayers,
+          personaMap,
+        ),
       ).resolves.not.toThrow();
     });
 
@@ -353,7 +460,12 @@ describe('페이즈별 행동 패턴 서비스', () => {
       const aiPlayers: Player[] = [];
       const personaMap = new Map();
 
-      const results = await service.executePhaseStartBehaviors(game, 'day', aiPlayers, personaMap);
+      const results = await service.executePhaseStartBehaviors(
+        game,
+        'day',
+        aiPlayers,
+        personaMap,
+      );
 
       expect(results).toHaveLength(0);
     });

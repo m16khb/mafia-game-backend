@@ -5,7 +5,11 @@ import { Game, GameRole } from '../../../entities/game.entity';
 import { Player } from '../../../entities/player.entity';
 import { Message } from '../../../entities/message.entity';
 import { AI_PERSONAS } from '../data/ai-personas.data';
-import { GamePromptContext, ChatPromptContext, VotePromptContext } from '../types/prompt-context.types';
+import {
+  GamePromptContext,
+  ChatPromptContext,
+  VotePromptContext,
+} from '../types/prompt-context.types';
 
 /**
  * PromptBuilderService의 프롬프트 생성 기능을 테스트합니다.
@@ -53,7 +57,7 @@ describe('프롬프트 빌더 서비스', () => {
       const game = createMockGame();
       const player = createMockPlayer(1, 'AI1', 'mafia', true);
       const persona = AI_PERSONAS[0];
-      
+
       const context: GamePromptContext = {
         game,
         player,
@@ -190,7 +194,11 @@ describe('프롬프트 빌더 서비스', () => {
       const game = createMockGame();
       const player = createMockPlayer(1, 'AI1', 'citizen', true);
       const persona = AI_PERSONAS[0];
-      const referencedMessage = createMockMessage(2, 'Player2', '누구를 의심하시나요?');
+      const referencedMessage = createMockMessage(
+        2,
+        'Player2',
+        '누구를 의심하시나요?',
+      );
 
       const context: ChatPromptContext = {
         gameState: {
@@ -291,7 +299,10 @@ describe('프롬프트 빌더 서비스', () => {
         },
         voteCandidates: candidates,
         currentVotes: [],
-        suspicionData: new Map([[2, 0.3], [3, 0.7]]),
+        suspicionData: new Map([
+          [2, 0.3],
+          [3, 0.7],
+        ]),
         timeRemaining: 60,
       };
 
@@ -385,9 +396,13 @@ describe('프롬프트 빌더 서비스', () => {
     it('페르소나 성격을 반영해야 함', () => {
       const game = createMockGame();
       const player = createMockPlayer(1, 'AI1', 'citizen', true);
-      
-      const analyticalPersona = AI_PERSONAS.find(p => p.personality.analytical > 0.8);
-      const emotionalPersona = AI_PERSONAS.find(p => p.personality.emotional > 0.8);
+
+      const analyticalPersona = AI_PERSONAS.find(
+        (p) => p.personality.analytical > 0.8,
+      );
+      const emotionalPersona = AI_PERSONAS.find(
+        (p) => p.personality.emotional > 0.8,
+      );
 
       const analyticalContext: GamePromptContext = {
         game,
@@ -553,7 +568,12 @@ function createMockGame(): Game {
   return game;
 }
 
-function createMockPlayer(id: number, name: string, role: GameRole, isAlive: boolean): Player {
+function createMockPlayer(
+  id: number,
+  name: string,
+  role: GameRole,
+  isAlive: boolean,
+): Player {
   const player = new Player();
   player.id = id;
   player.name = name;
@@ -563,7 +583,11 @@ function createMockPlayer(id: number, name: string, role: GameRole, isAlive: boo
   return player;
 }
 
-function createMockMessage(senderId: number, senderName: string, content: string): Message {
+function createMockMessage(
+  senderId: number,
+  senderName: string,
+  content: string,
+): Message {
   const message = new Message();
   message.id = Date.now();
   message.senderId = senderId;

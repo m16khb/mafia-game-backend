@@ -33,7 +33,9 @@ describe('역할별 프롬프트 서비스', () => {
       ],
     }).compile();
 
-    service = module.get<RoleSpecificPromptsService>(RoleSpecificPromptsService);
+    service = module.get<RoleSpecificPromptsService>(
+      RoleSpecificPromptsService,
+    );
   });
 
   /**
@@ -302,7 +304,9 @@ describe('역할별 프롬프트 서비스', () => {
       expect(prompt).toContain('경찰');
       expect(prompt).toContain('영향력 있는 시민');
       expect(prompt).toContain('우선순위');
-      expect(prompt.indexOf('경찰')).toBeLessThan(prompt.indexOf('영향력 있는 시민'));
+      expect(prompt.indexOf('경찰')).toBeLessThan(
+        prompt.indexOf('영향력 있는 시민'),
+      );
     });
   });
 
@@ -562,7 +566,12 @@ function createMockGame(): Game {
   return game;
 }
 
-function createMockPlayer(id: number, name: string, role: GameRole, isAlive: boolean): Player {
+function createMockPlayer(
+  id: number,
+  name: string,
+  role: GameRole,
+  isAlive: boolean,
+): Player {
   const player = new Player();
   player.id = id;
   player.name = name;

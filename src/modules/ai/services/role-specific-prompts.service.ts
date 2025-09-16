@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@libs/logger';
-import { GamePromptContext, ChatPromptContext, VotePromptContext } from '../types/prompt-context.types';
+import {
+  GamePromptContext,
+  ChatPromptContext,
+  VotePromptContext,
+} from '../types/prompt-context.types';
 import { AIPersona, PersonalityTraits } from '../types/ai-persona.types';
 import { Player } from '../../../entities/player.entity';
 
@@ -21,7 +25,7 @@ export class RoleSpecificPromptsService {
   getMafiaPrompt(context: GamePromptContext): string {
     const { game, player, persona } = context;
     const otherMafia = game.players.filter(
-      p => p.role === 'mafia' && p.id !== player.id && p.isAlive
+      (p) => p.role === 'mafia' && p.id !== player.id && p.isAlive,
     );
 
     return `
@@ -33,9 +37,10 @@ export class RoleSpecificPromptsService {
 - **핵심 전략**: 시민으로 완벽하게 위장하면서 동료 보호
 
 ### 동료 마피아 정보
-${otherMafia.length > 0 
-  ? `- **생존 동료**: ${otherMafia.map(p => p.name).join(', ')}`
-  : '- **동료 상태**: 모든 동료가 제거되었습니다 (혼자 남음)'
+${
+  otherMafia.length > 0
+    ? `- **생존 동료**: ${otherMafia.map((p) => p.name).join(', ')}`
+    : '- **동료 상태**: 모든 동료가 제거되었습니다 (혼자 남음)'
 }
 - **팀 상황**: ${this.analyzeMafiaTeamStatus(game)}
 
@@ -54,9 +59,10 @@ ${this.getMafiaDisguiseTechniques(persona)}
 - **전술**: 시민들 간의 갈등을 조장하여 분열 유도
 
 ### 야간 행동 지침
-${otherMafia.length > 0 
-  ? '- 동료들과 상의하여 최적의 제거 대상 결정\n- 각자의 의견을 존중하되 최종적으로 합의 도출'
-  : '- 혼자 결정해야 하므로 신중하게 판단\n- 다음날 의심받지 않을 대상 우선 고려'
+${
+  otherMafia.length > 0
+    ? '- 동료들과 상의하여 최적의 제거 대상 결정\n- 각자의 의견을 존중하되 최종적으로 합의 도출'
+    : '- 혼자 결정해야 하므로 신중하게 판단\n- 다음날 의심받지 않을 대상 우선 고려'
 }
 
 ---
@@ -235,15 +241,18 @@ ${this.getCitizenVotingStrategy(persona, game)}
    */
   private getMafiaNightPrompt(context: GamePromptContext): string {
     const { game, persona } = context;
-    const targets = game.players.filter(p => p.isAlive && p.role !== 'mafia');
+    const targets = game.players.filter((p) => p.isAlive && p.role !== 'mafia');
 
     return `
 ## 🌙 마피아 야간 행동
 
 ### 제거 대상 후보
-${targets.map(target => 
-  `- **${target.name}**: ${this.analyzeEliminationTarget(target, game)}`
-).join('\n')}
+${targets
+  .map(
+    (target) =>
+      `- **${target.name}**: ${this.analyzeEliminationTarget(target, game)}`,
+  )
+  .join('\n')}
 
 ### 전략적 고려사항
 ${this.getMafiaEliminationStrategy(persona, game)}
@@ -269,15 +278,20 @@ JSON 응답 형식:
    */
   private getPoliceNightPrompt(context: GamePromptContext): string {
     const { game, persona } = context;
-    const suspects = game.players.filter(p => p.isAlive && p.id !== context.player.id);
+    const suspects = game.players.filter(
+      (p) => p.isAlive && p.id !== context.player.id,
+    );
 
     return `
 ## 🔍 경찰 야간 조사
 
 ### 조사 대상 후보
-${suspects.map(suspect => 
-  `- **${suspect.name}**: ${this.analyzeInvestigationTarget(suspect, game)}`
-).join('\n')}
+${suspects
+  .map(
+    (suspect) =>
+      `- **${suspect.name}**: ${this.analyzeInvestigationTarget(suspect, game)}`,
+  )
+  .join('\n')}
 
 ### 조사 전략
 ${this.getInvestigationStrategy(persona, game)}
@@ -297,15 +311,18 @@ JSON 응답 형식:
    */
   private getDoctorNightPrompt(context: GamePromptContext): string {
     const { game, persona } = context;
-    const protectionTargets = game.players.filter(p => p.isAlive);
+    const protectionTargets = game.players.filter((p) => p.isAlive);
 
     return `
 ## ⚕️ 의사 야간 보호
 
 ### 보호 대상 후보
-${protectionTargets.map(target => 
-  `- **${target.name}**: ${this.analyzeProtectionTarget(target, game)}`
-).join('\n')}
+${protectionTargets
+  .map(
+    (target) =>
+      `- **${target.name}**: ${this.analyzeProtectionTarget(target, game)}`,
+  )
+  .join('\n')}
 
 ### 보호 전략
 ${this.getProtectionStrategy(persona, game)}
@@ -323,9 +340,13 @@ JSON 응답 형식:
   // Private helper methods
 
   private analyzeMafiaTeamStatus(game: any): string {
-    const aliveMafia = game.players.filter(p => p.role === 'mafia' && p.isAlive).length;
-    const aliveCitizens = game.players.filter(p => p.role !== 'mafia' && p.isAlive).length;
-    
+    const aliveMafia = game.players.filter(
+      (p) => p.role === 'mafia' && p.isAlive,
+    ).length;
+    const aliveCitizens = game.players.filter(
+      (p) => p.role !== 'mafia' && p.isAlive,
+    ).length;
+
     if (aliveMafia >= aliveCitizens) {
       return '승리 직전 - 신중하게 마무리하세요';
     } else if (aliveMafia === 1) {
@@ -337,9 +358,11 @@ JSON 응답 형식:
 
   private analyzeThreatLevels(game: any, player: Player): string {
     const threats = [];
-    const alivePlayers = game.players.filter(p => p.isAlive && p.id !== player.id);
-    
-    alivePlayers.forEach(p => {
+    const alivePlayers = game.players.filter(
+      (p) => p.isAlive && p.id !== player.id,
+    );
+
+    alivePlayers.forEach((p) => {
       if (p.role === 'police') {
         threats.push(`${p.name} - 경찰 (최고 위험)`);
       } else if (p.role === 'doctor') {
@@ -347,14 +370,18 @@ JSON 응답 형식:
       }
     });
 
-    return threats.length > 0 
+    return threats.length > 0
       ? threats.join('\n')
       : '현재 특별한 위협 요소가 확인되지 않음';
   }
 
-  private getMafiaStrategy(persona: AIPersona, game: any, teamSize: number): string {
+  private getMafiaStrategy(
+    persona: AIPersona,
+    game: any,
+    teamSize: number,
+  ): string {
     const strategies = [];
-    
+
     if (persona.personality.aggression > 0.7) {
       strategies.push('🗡️ 적극적으로 시민들을 공격하고 의심을 유도');
     } else {
@@ -376,11 +403,11 @@ JSON 응답 형식:
 
   private getMafiaDisguiseTechniques(persona: AIPersona): string {
     const techniques = [];
-    
+
     if (persona.personality.emotional > 0.6) {
       techniques.push('😱 적절한 감정 표현으로 시민처럼 보이기');
     }
-    
+
     if (persona.personality.trust > 0.5) {
       techniques.push('🤝 다른 플레이어들을 적극적으로 믿는 척하기');
     } else {
@@ -395,7 +422,7 @@ JSON 응답 형식:
 
   private getPoliceStrategy(persona: AIPersona, game: any): string {
     const strategies = [];
-    
+
     if (persona.personality.caution > 0.7) {
       strategies.push('🔒 정보 공개를 신중하게 하여 정체 보호');
     } else {
@@ -407,13 +434,13 @@ JSON 응답 형식:
     }
 
     strategies.push('🕵️ 행동 패턴 분석을 통한 마피아 색출');
-    
+
     return strategies.join('\n');
   }
 
   private getInvestigationGuidelines(persona: AIPersona, game: any): string {
     const guidelines = [];
-    
+
     if (persona.personality.analytical > 0.7) {
       guidelines.push('📊 논리적 근거가 강한 대상 우선');
     } else {
@@ -443,7 +470,7 @@ JSON 응답 형식:
 
   private getDoctorStrategy(persona: AIPersona, game: any): string {
     const strategies = [];
-    
+
     if (persona.personality.analytical > 0.7) {
       strategies.push('🧠 논리적 분석을 통한 마피아 타겟 예측');
     } else {
@@ -469,11 +496,11 @@ JSON 응답 형식:
 
   private getCitizenStrategy(persona: AIPersona, game: any): string {
     const strategies = [];
-    
+
     if (persona.personality.analytical > 0.7) {
       strategies.push('📊 논리적 분석을 통한 체계적 접근');
     }
-    
+
     if (persona.personality.leadership > 0.6) {
       strategies.push('👑 다른 시민들을 조율하여 효과적인 협력');
     }

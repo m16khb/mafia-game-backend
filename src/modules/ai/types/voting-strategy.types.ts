@@ -126,7 +126,11 @@ export interface AlternativeVote {
  */
 export interface VotingCondition {
   /** 조건 유형 */
-  type: 'other_votes' | 'information_revealed' | 'time_pressure' | 'tie_situation';
+  type:
+    | 'other_votes'
+    | 'information_revealed'
+    | 'time_pressure'
+    | 'tie_situation';
   /** 조건 설명 */
   description: string;
   /** 조건 확인 함수 */
@@ -160,7 +164,7 @@ export interface VotingStrategy {
 /**
  * 투표 우선순위
  */
-export type VotingPriority = 
+export type VotingPriority =
   | 'eliminate_threats'
   | 'avoid_suspicion'
   | 'protect_teammates'
@@ -181,7 +185,12 @@ export type VotingPriority =
  */
 export interface StrategicConsideration {
   /** 고려사항 유형 */
-  type: 'information_warfare' | 'misdirection' | 'alliance_building' | 'timing' | 'pressure';
+  type:
+    | 'information_warfare'
+    | 'misdirection'
+    | 'alliance_building'
+    | 'timing'
+    | 'pressure';
   /** 가중치 */
   weight: number;
   /** 설명 */
@@ -268,7 +277,7 @@ export interface VoteReason {
   evidence: string[];
 }
 
-export type VoteReasonType = 
+export type VoteReasonType =
   | 'high_suspicion'
   | 'strategic_elimination'
   | 'information_gathering'
@@ -341,7 +350,12 @@ export interface GeneratedVoteExplanation {
   /** 보조 설명 */
   supportingDetails: string[];
   /** 감정적 톤 */
-  emotionalTone: 'neutral' | 'confident' | 'hesitant' | 'defensive' | 'aggressive';
+  emotionalTone:
+    | 'neutral'
+    | 'confident'
+    | 'hesitant'
+    | 'defensive'
+    | 'aggressive';
   /** 예상 반응 */
   expectedReactions: PlayerReaction[];
 }
@@ -353,7 +367,12 @@ export interface PlayerReaction {
   /** 플레이어 ID */
   playerId: number;
   /** 예상 반응 유형 */
-  reactionType: 'supportive' | 'neutral' | 'suspicious' | 'defensive' | 'counter_accusation';
+  reactionType:
+    | 'supportive'
+    | 'neutral'
+    | 'suspicious'
+    | 'defensive'
+    | 'counter_accusation';
   /** 반응 확률 */
   probability: number;
   /** 반응 이유 */
@@ -395,7 +414,12 @@ export interface SituationalStrategy {
  */
 export interface SituationCondition {
   /** 조건 유형 */
-  type: 'player_count' | 'day_count' | 'suspicion_level' | 'role_revealed' | 'team_status';
+  type:
+    | 'player_count'
+    | 'day_count'
+    | 'suspicion_level'
+    | 'role_revealed'
+    | 'team_status';
   /** 조건 연산자 */
   operator: '>' | '<' | '>=' | '<=' | '==' | '!=';
   /** 조건 값 */
@@ -437,7 +461,11 @@ export interface CooperationRule {
   /** 협력 대상 역할 */
   targetRole: GameRole;
   /** 협력 유형 */
-  cooperationType: 'coordinate_votes' | 'protect_each_other' | 'share_information' | 'create_diversion';
+  cooperationType:
+    | 'coordinate_votes'
+    | 'protect_each_other'
+    | 'share_information'
+    | 'create_diversion';
   /** 협력 조건 */
   conditions: SituationCondition[];
   /** 협력 강도 (0-1) */

@@ -8,14 +8,14 @@ import { AIPersona } from '../types/ai-persona.types';
 import { AIPersonaService } from './ai-persona.service';
 import { PromptBuilderService } from './prompt-builder.service';
 import { ChatTimingService } from './chat-timing.service';
-import { 
-  ChatGenerationContext, 
-  ChatResponse, 
-  ConversationState, 
+import {
+  ChatGenerationContext,
+  ChatResponse,
+  ConversationState,
   AtmosphereLevel,
   ChatTriggerReason,
   MessageTopic,
-  EmotionState 
+  EmotionState,
 } from '../types/chat-timing.types';
 import { ChatPromptContext } from '../types/prompt-context.types';
 
@@ -50,8 +50,8 @@ export class AIChatService {
     // 대화 상태 업데이트
     this.updateConversationState(game.id, phase);
 
-    const aiPlayers = game.players.filter(p => p.isAi && p.isAlive);
-    
+    const aiPlayers = game.players.filter((p) => p.isAi && p.isAlive);
+
     for (const player of aiPlayers) {
       try {
         const persona = await this.aiPersonaService.getPersona(player.id);
@@ -61,17 +61,27 @@ export class AIChatService {
         }
 
         // 페이즈 시작 시 채팅 결정
-        const chatDecision = this.chatTimingService.shouldInitiateChatOnPhaseStart(
-          persona,
-          phase,
-          game,
-        );
+        const chatDecision =
+          this.chatTimingService.shouldInitiateChatOnPhaseStart(
+            persona,
+            phase,
+            game,
+          );
 
         if (chatDecision.shouldChat) {
-          this.scheduleChatGeneration(game, player, persona, 'phase_start', chatDecision.delay);
+          this.scheduleChatGeneration(
+            game,
+            player,
+            persona,
+            'phase_start',
+            chatDecision.delay,
+          );
         }
       } catch (error) {
-        this.logger.error(error, `Failed to process phase start chat for player ${player.id}`);
+        this.logger.error(
+          error,
+          `Failed to process phase start chat for player ${player.id}`,
+        );
       }
     }
   }
@@ -81,13 +91,20 @@ export class AIChatService {
    * @param game 현재 게임
    * @param originalMessage 원본 메시지
    */
-  async respondToPlayerChat(game: Game, originalMessage: Message): Promise<void> {
-    this.logger.log(`Processing chat response for message: ${originalMessage.content}`);
+  async respondToPlayerChat(
+    game: Game,
+    originalMessage: Message,
+  ): Promise<void> {
+    this.logger.log(
+      `Processing chat response for message: ${originalMessage.content}`,
+    );
 
     // 대화 상태 업데이트
     this.updateConversationStateWithMessage(game.id, originalMessage);
 
-    const aiPlayers = game.players.filter(p => p.isAi && p.isAlive && p.id !== originalMessage.senderId);
+    const aiPlayers = game.players.filter(
+      (p) => p.isAi && p.isAlive && p.id !== originalMessage.senderId,
+    );
     const conversationState = this.getConversationState(game.id);
 
     for (const player of aiPlayers) {
@@ -114,7 +131,10 @@ export class AIChatService {
           );
         }
       } catch (error) {
-        this.logger.error(error, `Failed to process chat response for player ${player.id}`);
+        this.logger.error(
+          error,
+          `Failed to process chat response for player ${player.id}`,
+        );
       }
     }
   }
@@ -126,7 +146,7 @@ export class AIChatService {
   async processSpontaneousChats(game: Game): Promise<void> {
     if (game.status !== 'playing') return;
 
-    const aiPlayers = game.players.filter(p => p.isAi && p.isAlive);
+    const aiPlayers = game.players.filter((p) => p.isAi && p.isAlive);
     const conversationState = this.getConversationState(game.id);
     const now = Date.now();
 
@@ -138,21 +158,34 @@ export class AIChatService {
         // 이미 예약된 채팅이 있으면 건너뛰기
         if (this.activeChatTimers.has(player.id)) continue;
 
-        const timeSinceLastActivity = this.getTimeSinceLastActivity(player.id, game);
-        
-        // 자발적 채팅 결정
-        const chatDecision = this.chatTimingService.shouldInitiateSpontaneousChat(
-          persona,
+        const timeSinceLastActivity = this.getTimeSinceLastActivity(
+          player.id,
           game,
-          conversationState,
-          timeSinceLastActivity,
         );
 
+        // 자발적 채팅 결정
+        const chatDecision =
+          this.chatTimingService.shouldInitiateSpontaneousChat(
+            persona,
+            game,
+            conversationState,
+            timeSinceLastActivity,
+          );
+
         if (chatDecision.shouldChat) {
-          this.scheduleChatGeneration(game, player, persona, chatDecision.reason, chatDecision.delay);
+          this.scheduleChatGeneration(
+            game,
+            player,
+            persona,
+            chatDecision.reason,
+            chatDecision.delay,
+          );
         }
       } catch (error) {
-        this.logger.error(error, `Failed to process spontaneous chat for player ${player.id}`);
+        this.logger.error(
+          error,
+          `Failed to process spontaneous chat for player ${player.id}`,
+        );
       }
     }
   }
@@ -173,16 +206,27 @@ export class AIChatService {
 
     const timer = setTimeout(async () => {
       try {
-        await this.generateAndSendChat(game, player, persona, trigger, referencedMessage);
+        await this.generateAndSendChat(
+          game,
+          player,
+          persona,
+          trigger,
+          referencedMessage,
+        );
       } catch (error) {
-        this.logger.error(error, `Failed to generate chat for player ${player.id}`);
+        this.logger.error(
+          error,
+          `Failed to generate chat for player ${player.id}`,
+        );
       } finally {
         this.activeChatTimers.delete(player.id);
       }
     }, delay);
 
     this.activeChatTimers.set(player.id, timer);
-    this.logger.debug(`Scheduled chat for player ${player.id} in ${delay}ms (reason: ${trigger})`);
+    this.logger.debug(
+      `Scheduled chat for player ${player.id} in ${delay}ms (reason: ${trigger})`,
+    );
   }
 
   /**
@@ -216,10 +260,10 @@ export class AIChatService {
       );
 
       const chatResponse = await this.generateChatContent(context);
-      
+
       if (chatResponse.content && chatResponse.content.trim()) {
         await this.sendAIMessage(game.id, player.id, chatResponse);
-        
+
         // 후속 메시지가 필요한 경우 스케줄링
         if (chatResponse.needsFollowUp && chatResponse.nextMessageDelay) {
           this.scheduleChatGeneration(
@@ -232,7 +276,10 @@ export class AIChatService {
         }
       }
     } catch (error) {
-      this.logger.error(error, `Failed to generate and send chat for player ${player.id}`);
+      this.logger.error(
+        error,
+        `Failed to generate and send chat for player ${player.id}`,
+      );
     }
   }
 
@@ -263,7 +310,9 @@ export class AIChatService {
   /**
    * 채팅 내용을 생성합니다.
    */
-  private async generateChatContent(context: ChatGenerationContext): Promise<ChatResponse> {
+  private async generateChatContent(
+    context: ChatGenerationContext,
+  ): Promise<ChatResponse> {
     try {
       // 채팅 프롬프트 구성
       const chatPromptContext: ChatPromptContext = {
@@ -276,21 +325,32 @@ export class AIChatService {
           gameHistory: '', // TODO: 실제 히스토리
         },
         conversationContext: {
-          currentTopic: this.mapMessageTopicToConversationTopic(context.conversationState.currentTopic),
+          currentTopic: this.mapMessageTopicToConversationTopic(
+            context.conversationState.currentTopic,
+          ),
           participants: [context.player.id], // TODO: 실제 참여자 목록
-          conversationStart: new Date(Date.now() - context.conversationState.timeSinceLastMessage * 1000),
-          emotionalTone: this.mapAtmosphereToTone(context.conversationState.atmosphereLevel),
+          conversationStart: new Date(
+            Date.now() - context.conversationState.timeSinceLastMessage * 1000,
+          ),
+          emotionalTone: this.mapAtmosphereToTone(
+            context.conversationState.atmosphereLevel,
+          ),
         },
         recentChat: context.recentMessages,
         referencedMessage: context.referencedMessage,
         chatTrigger: this.mapChatTriggerReasonToChatTrigger(context.trigger),
       };
 
-      const prompt = this.promptBuilderService.buildChatPrompt(chatPromptContext, {
-        requireJsonResponse: true,
-        maxLength: 80,
-        emotionalIntensity: this.getEmotionalIntensityForTrigger(context.trigger),
-      });
+      const prompt = this.promptBuilderService.buildChatPrompt(
+        chatPromptContext,
+        {
+          requireJsonResponse: true,
+          maxLength: 80,
+          emotionalIntensity: this.getEmotionalIntensityForTrigger(
+            context.trigger,
+          ),
+        },
+      );
 
       // TODO: LLM 서비스 호출
       // const llmResponse = await this.llmService.generate({
@@ -312,15 +372,20 @@ export class AIChatService {
   /**
    * 임시 모크 채팅 응답을 생성합니다. (LLM 서비스 구현 전까지 사용)
    */
-  private generateMockChatResponse(context: ChatGenerationContext): ChatResponse {
+  private generateMockChatResponse(
+    context: ChatGenerationContext,
+  ): ChatResponse {
     const { persona, trigger, referencedMessage } = context;
-    
+
     let content = '';
     let emotion: EmotionState = 'neutral';
-    
+
     switch (trigger) {
       case 'phase_start':
-        content = this.generatePhaseStartMessage(persona, context.game.currentPhase as GamePhase);
+        content = this.generatePhaseStartMessage(
+          persona,
+          context.game.currentPhase as GamePhase,
+        );
         emotion = 'confident';
         break;
       case 'direct_mention':
@@ -350,38 +415,37 @@ export class AIChatService {
       emotion,
       confidence: 0.7 + Math.random() * 0.3,
       needsFollowUp: Math.random() < 0.2,
-      nextMessageDelay: Math.random() < 0.2 ? 5000 + Math.random() * 10000 : undefined,
+      nextMessageDelay:
+        Math.random() < 0.2 ? 5000 + Math.random() * 10000 : undefined,
     };
   }
 
   /**
    * 페이즈 시작 메시지를 생성합니다.
    */
-  private generatePhaseStartMessage(persona: AIPersona, phase: GamePhase): string {
+  private generatePhaseStartMessage(
+    persona: AIPersona,
+    phase: GamePhase,
+  ): string {
     const messages = {
       day: [
         '새로운 하루가 시작됐네요.',
         '오늘은 누가 의심스럽나요?',
         '어제 밤에 무슨 일이 있었을까요?',
       ],
-      night: [
-        '조용한 밤이 왔네요...',
-        '모두 조심하세요.',
-      ],
+      night: ['조용한 밤이 왔네요...', '모두 조심하세요.'],
       voting: [
         '드디어 투표 시간입니다.',
         '신중하게 결정해야겠어요.',
         '누구에게 투표할지 고민되네요.',
       ],
-      result: [
-        '결과가 궁금하네요.',
-        '어떻게 될까요?',
-      ],
+      result: ['결과가 궁금하네요.', '어떻게 될까요?'],
     };
 
     const phaseMessages = messages[phase] || messages.day;
-    const randomMessage = phaseMessages[Math.floor(Math.random() * phaseMessages.length)];
-    
+    const randomMessage =
+      phaseMessages[Math.floor(Math.random() * phaseMessages.length)];
+
     return this.addPersonalityToMessage(randomMessage, persona);
   }
 
@@ -397,7 +461,8 @@ export class AIChatService {
       '다른 사람을 의심해보세요.',
     ];
 
-    const randomMessage = defenseMessages[Math.floor(Math.random() * defenseMessages.length)];
+    const randomMessage =
+      defenseMessages[Math.floor(Math.random() * defenseMessages.length)];
     return this.addPersonalityToMessage(randomMessage, persona);
   }
 
@@ -413,7 +478,8 @@ export class AIChatService {
       '너무 조용하지 않나요?',
     ];
 
-    const randomMessage = suspicionMessages[Math.floor(Math.random() * suspicionMessages.length)];
+    const randomMessage =
+      suspicionMessages[Math.floor(Math.random() * suspicionMessages.length)];
     return this.addPersonalityToMessage(randomMessage, persona);
   }
 
@@ -429,7 +495,8 @@ export class AIChatService {
       '모두가 협력해야 해요.',
     ];
 
-    const randomMessage = persuasionMessages[Math.floor(Math.random() * persuasionMessages.length)];
+    const randomMessage =
+      persuasionMessages[Math.floor(Math.random() * persuasionMessages.length)];
     return this.addPersonalityToMessage(randomMessage, persona);
   }
 
@@ -445,7 +512,8 @@ export class AIChatService {
       '조금 더 신중하게 접근해보죠.',
     ];
 
-    const randomMessage = generalMessages[Math.floor(Math.random() * generalMessages.length)];
+    const randomMessage =
+      generalMessages[Math.floor(Math.random() * generalMessages.length)];
     return this.addPersonalityToMessage(randomMessage, persona);
   }
 
@@ -486,11 +554,15 @@ export class AIChatService {
   /**
    * AI 메시지를 전송합니다.
    */
-  private async sendAIMessage(gameId: number, playerId: number, chatResponse: ChatResponse): Promise<void> {
+  private async sendAIMessage(
+    gameId: number,
+    playerId: number,
+    chatResponse: ChatResponse,
+  ): Promise<void> {
     try {
       // TODO: GameService나 MessageService를 통해 실제 메시지 저장 및 브로드캐스트
       this.logger.log(`AI Player ${playerId} says: "${chatResponse.content}"`);
-      
+
       // WebSocket으로 메시지 브로드캐스트
       this.eventEmitter.emit('ai.message.sent', {
         gameId,
@@ -500,7 +572,10 @@ export class AIChatService {
         emotion: chatResponse.emotion,
       });
     } catch (error) {
-      this.logger.error(error, `Failed to send AI message for player ${playerId}`);
+      this.logger.error(
+        error,
+        `Failed to send AI message for player ${playerId}`,
+      );
     }
   }
 
@@ -508,8 +583,9 @@ export class AIChatService {
    * 대화 상태를 업데이트합니다.
    */
   private updateConversationState(gameId: number, phase: GamePhase): void {
-    const currentState = this.conversationStates.get(gameId) || this.getDefaultConversationState();
-    
+    const currentState =
+      this.conversationStates.get(gameId) || this.getDefaultConversationState();
+
     const updatedState: ConversationState = {
       ...currentState,
       currentTopic: this.getPhaseDefaultTopic(phase),
@@ -523,11 +599,18 @@ export class AIChatService {
   /**
    * 메시지와 함께 대화 상태를 업데이트합니다.
    */
-  private updateConversationStateWithMessage(gameId: number, message: Message): void {
-    const currentState = this.conversationStates.get(gameId) || this.getDefaultConversationState();
-    
+  private updateConversationStateWithMessage(
+    gameId: number,
+    message: Message,
+  ): void {
+    const currentState =
+      this.conversationStates.get(gameId) || this.getDefaultConversationState();
+
     const topic = this.classifyMessageTopic(message.content);
-    const atmosphere = this.updateAtmosphereLevel(currentState.atmosphereLevel, message);
+    const atmosphere = this.updateAtmosphereLevel(
+      currentState.atmosphereLevel,
+      message,
+    );
 
     const updatedState: ConversationState = {
       ...currentState,
@@ -545,7 +628,9 @@ export class AIChatService {
    * 대화 상태를 가져옵니다.
    */
   private getConversationState(gameId: number): ConversationState {
-    return this.conversationStates.get(gameId) || this.getDefaultConversationState();
+    return (
+      this.conversationStates.get(gameId) || this.getDefaultConversationState()
+    );
   }
 
   /**
@@ -573,53 +658,95 @@ export class AIChatService {
 
   private getTimeSinceLastActivity(playerId: number, game: Game): number {
     const playerMessages = (game.messages || [])
-      .filter(m => m.senderId === playerId)
+      .filter((m) => m.senderId === playerId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     if (playerMessages.length === 0) return Infinity;
-    
+
     const lastMessage = playerMessages[0];
     return (Date.now() - lastMessage.createdAt.getTime()) / 1000;
   }
 
-  private mapAtmosphereToTone(atmosphere: AtmosphereLevel): 'neutral' | 'tense' | 'accusatory' | 'defensive' | 'cooperative' {
+  private mapAtmosphereToTone(
+    atmosphere: AtmosphereLevel,
+  ): 'neutral' | 'tense' | 'accusatory' | 'defensive' | 'cooperative' {
     switch (atmosphere) {
-      case 'heated': return 'accusatory';
-      case 'tense': return 'tense';
-      case 'suspicious': return 'tense';
-      case 'panicked': return 'defensive';
-      case 'analytical': return 'neutral';
-      default: return 'neutral';
+      case 'heated':
+        return 'accusatory';
+      case 'tense':
+        return 'tense';
+      case 'suspicious':
+        return 'tense';
+      case 'panicked':
+        return 'defensive';
+      case 'analytical':
+        return 'neutral';
+      default:
+        return 'neutral';
     }
   }
 
-  private mapMessageTopicToConversationTopic(topic: MessageTopic): 'role_discussion' | 'suspicion_sharing' | 'vote_coordination' | 'defense_argument' | 'information_sharing' | 'small_talk' | 'strategy_discussion' {
+  private mapMessageTopicToConversationTopic(
+    topic: MessageTopic,
+  ):
+    | 'role_discussion'
+    | 'suspicion_sharing'
+    | 'vote_coordination'
+    | 'defense_argument'
+    | 'information_sharing'
+    | 'small_talk'
+    | 'strategy_discussion' {
     switch (topic) {
-      case 'role_hint': return 'role_discussion';
-      case 'suspicion': return 'suspicion_sharing';
-      case 'vote_discussion': return 'vote_coordination';
-      case 'defense': return 'defense_argument';
-      case 'information': return 'information_sharing';
-      case 'strategy': return 'strategy_discussion';
-      default: return 'small_talk';
+      case 'role_hint':
+        return 'role_discussion';
+      case 'suspicion':
+        return 'suspicion_sharing';
+      case 'vote_discussion':
+        return 'vote_coordination';
+      case 'defense':
+        return 'defense_argument';
+      case 'information':
+        return 'information_sharing';
+      case 'strategy':
+        return 'strategy_discussion';
+      default:
+        return 'small_talk';
     }
   }
 
-  private mapChatTriggerReasonToChatTrigger(reason: ChatTriggerReason): 'phase_start' | 'response_to_message' | 'spontaneous' | 'accusation_defense' | 'information_share' | 'vote_persuasion' | 'role_hint' {
+  private mapChatTriggerReasonToChatTrigger(
+    reason: ChatTriggerReason,
+  ):
+    | 'phase_start'
+    | 'response_to_message'
+    | 'spontaneous'
+    | 'accusation_defense'
+    | 'information_share'
+    | 'vote_persuasion'
+    | 'role_hint' {
     switch (reason) {
-      case 'phase_start': return 'phase_start';
+      case 'phase_start':
+        return 'phase_start';
       case 'direct_mention':
-      case 'information_response': return 'response_to_message';
+      case 'information_response':
+        return 'response_to_message';
       case 'accused':
-      case 'defend_self': return 'accusation_defense';
-      case 'share_suspicion': return 'information_share';
-      case 'vote_persuasion': return 'vote_persuasion';
-      case 'role_hint': return 'role_hint';
-      default: return 'spontaneous';
+      case 'defend_self':
+        return 'accusation_defense';
+      case 'share_suspicion':
+        return 'information_share';
+      case 'vote_persuasion':
+        return 'vote_persuasion';
+      case 'role_hint':
+        return 'role_hint';
+      default:
+        return 'spontaneous';
     }
   }
 
-  private getEmotionalIntensityForTrigger(trigger: ChatTriggerReason): 'low' | 'medium' | 'high' {
+  private getEmotionalIntensityForTrigger(
+    trigger: ChatTriggerReason,
+  ): 'low' | 'medium' | 'high' {
     switch (trigger) {
       case 'accused':
       case 'defend_self':
@@ -634,48 +761,77 @@ export class AIChatService {
 
   private getPhaseDefaultTopic(phase: GamePhase): MessageTopic {
     switch (phase) {
-      case 'day': return 'suspicion';
-      case 'voting': return 'vote_discussion';
-      case 'night': return 'small_talk';
-      case 'result': return 'information';
-      default: return 'small_talk';
+      case 'day':
+        return 'suspicion';
+      case 'voting':
+        return 'vote_discussion';
+      case 'night':
+        return 'small_talk';
+      case 'result':
+        return 'information';
+      default:
+        return 'small_talk';
     }
   }
 
   private getPhaseDefaultAtmosphere(phase: GamePhase): AtmosphereLevel {
     switch (phase) {
-      case 'day': return 'analytical';
-      case 'voting': return 'tense';
-      case 'night': return 'calm';
-      case 'result': return 'tense';
-      default: return 'calm';
+      case 'day':
+        return 'analytical';
+      case 'voting':
+        return 'tense';
+      case 'night':
+        return 'calm';
+      case 'result':
+        return 'tense';
+      default:
+        return 'calm';
     }
   }
 
   private classifyMessageTopic(content: string): MessageTopic {
-    if (content.includes('의심') || content.includes('수상')) return 'suspicion';
-    if (content.includes('투표') || content.includes('찍')) return 'vote_discussion';
-    if (content.includes('마피아') || content.includes('시민')) return 'accusation';
-    if (content.includes('경찰') || content.includes('의사')) return 'role_hint';
-    if (content.includes('방어') || content.includes('아니') || content.includes('억울')) return 'defense';
-    if (content.includes('동의') || content.includes('맞아') || content.includes('지지')) return 'support';
+    if (content.includes('의심') || content.includes('수상'))
+      return 'suspicion';
+    if (content.includes('투표') || content.includes('찍'))
+      return 'vote_discussion';
+    if (content.includes('마피아') || content.includes('시민'))
+      return 'accusation';
+    if (content.includes('경찰') || content.includes('의사'))
+      return 'role_hint';
+    if (
+      content.includes('방어') ||
+      content.includes('아니') ||
+      content.includes('억울')
+    )
+      return 'defense';
+    if (
+      content.includes('동의') ||
+      content.includes('맞아') ||
+      content.includes('지지')
+    )
+      return 'support';
     return 'small_talk';
   }
 
-  private updateAtmosphereLevel(current: AtmosphereLevel, message: Message): AtmosphereLevel {
+  private updateAtmosphereLevel(
+    current: AtmosphereLevel,
+    message: Message,
+  ): AtmosphereLevel {
     const content = message.content.toLowerCase();
-    
+
     if (content.includes('마피아') && content.includes('!')) return 'heated';
-    if (content.includes('의심') || content.includes('수상')) return 'suspicious';
+    if (content.includes('의심') || content.includes('수상'))
+      return 'suspicious';
     if (content.includes('?') && content.includes('투표')) return 'tense';
-    if (content.includes('분석') || content.includes('논리')) return 'analytical';
-    
+    if (content.includes('분석') || content.includes('논리'))
+      return 'analytical';
+
     return current; // 변화가 없으면 현재 상태 유지
   }
 
   private detectArgument(content: string): boolean {
     const argumentPatterns = ['아니야', '틀렸', '반대', '잘못', '그렇지 않'];
-    return argumentPatterns.some(pattern => content.includes(pattern));
+    return argumentPatterns.some((pattern) => content.includes(pattern));
   }
 
   /**
@@ -685,14 +841,14 @@ export class AIChatService {
     // 활성 타이머 정리
     const game = { id: gameId }; // 실제로는 게임 객체를 받아야 함
     // const aiPlayers = game.players?.filter(p => p.isAi) || [];
-    
+
     // aiPlayers.forEach(player => {
     //   this.cancelScheduledChat(player.id);
     // });
 
     // 대화 상태 정리
     this.conversationStates.delete(gameId);
-    
+
     this.logger.log(`Cleaned up AI chat service for game ${gameId}`);
   }
 }

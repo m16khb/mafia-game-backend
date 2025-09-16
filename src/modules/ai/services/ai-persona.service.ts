@@ -21,13 +21,13 @@ export class AIPersonaService {
    * AI 플레이어들에게 랜덤한 페르소나를 배정합니다.
    */
   assignRandomPersonas(players: Player[]): Map<number, AIPersona> {
-    const aiPlayers = players.filter(p => p.isAi);
+    const aiPlayers = players.filter((p) => p.isAi);
     const availablePersonas = [...AI_PERSONAS];
     const assignments = new Map<number, AIPersona>();
 
     this.logger.log(`Assigning personas to ${aiPlayers.length} AI players`);
 
-    aiPlayers.forEach(player => {
+    aiPlayers.forEach((player) => {
       if (availablePersonas.length === 0) {
         // 페르소나가 부족한 경우 다시 채우기
         availablePersonas.push(...AI_PERSONAS);
@@ -35,7 +35,7 @@ export class AIPersonaService {
 
       const randomIndex = Math.floor(Math.random() * availablePersonas.length);
       const persona = availablePersonas.splice(randomIndex, 1)[0];
-      
+
       assignments.set(player.id, persona);
       this.personaAssignments.set(player.id, persona);
 
@@ -43,7 +43,7 @@ export class AIPersonaService {
       player.name = persona.name;
 
       this.logger.log(
-        `Assigned persona '${persona.name}' (${persona.id}) to AI player ${player.id}`
+        `Assigned persona '${persona.name}' (${persona.id}) to AI player ${player.id}`,
       );
     });
 
@@ -64,7 +64,18 @@ export class AIPersonaService {
     // 데이터베이스에서 플레이어 정보 조회
     const player = await this.playerRepository.findById(playerId);
     if (player?.aiPersonaId) {
-      const persona = this.getPersonaById(player.aiPersonaId);
+      // Map numeric ID to string ID for legacy compatibility
+      const personaIdMap: Record<number, string> = {
+        1: 'detective-holmes',
+        2: 'smooth-talker',
+        3: 'team-player',
+        4: 'lone-wolf',
+        5: 'wild-card',
+      };
+
+      const stringId =
+        personaIdMap[player.aiPersonaId] || player.aiPersonaId.toString();
+      const persona = this.getPersonaById(stringId);
       if (persona) {
         // 메모리에 캐시
         this.personaAssignments.set(playerId, persona);
@@ -86,7 +97,7 @@ export class AIPersonaService {
    * 페르소나 ID로 페르소나를 가져옵니다.
    */
   getPersonaById(personaId: string): AIPersona | undefined {
-    return AI_PERSONAS.find(p => p.id === personaId);
+    return AI_PERSONAS.find((p) => p.id === personaId);
   }
 
   /**
@@ -147,10 +158,18 @@ export class AIPersonaService {
   describePlayStyle(persona: AIPersona): string {
     const styles = [];
 
-    styles.push(`투표성향: ${this.translateVotingPattern(persona.playStyle.votingPattern)}`);
-    styles.push(`대화수준: ${this.translateDiscussionLevel(persona.playStyle.discussionLevel)}`);
-    styles.push(`의심임계값: ${Math.round(persona.playStyle.suspicionThreshold * 100)}%`);
-    styles.push(`팀플레이: ${Math.round(persona.playStyle.teamplayPreference * 100)}%`);
+    styles.push(
+      `투표성향: ${this.translateVotingPattern(persona.playStyle.votingPattern)}`,
+    );
+    styles.push(
+      `대화수준: ${this.translateDiscussionLevel(persona.playStyle.discussionLevel)}`,
+    );
+    styles.push(
+      `의심임계값: ${Math.round(persona.playStyle.suspicionThreshold * 100)}%`,
+    );
+    styles.push(
+      `팀플레이: ${Math.round(persona.playStyle.teamplayPreference * 100)}%`,
+    );
 
     return styles.join(', ');
   }
@@ -160,7 +179,7 @@ export class AIPersonaService {
       aggressive: '공격적',
       defensive: '방어적',
       analytical: '분석적',
-      random: '무작위'
+      random: '무작위',
     };
     return patterns[pattern as keyof typeof patterns] || pattern;
   }
@@ -170,7 +189,7 @@ export class AIPersonaService {
       silent: '과묵',
       moderate: '보통',
       active: '활발',
-      talkative: '수다스러움'
+      talkative: '수다스러움',
     };
     return levels[level as keyof typeof levels] || level;
   }

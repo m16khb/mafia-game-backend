@@ -21,7 +21,7 @@ import {
   VotingScenario,
   GeneratedVoteExplanation,
   VoteExplanationContext,
-  ExplanationStyle
+  ExplanationStyle,
 } from '../types/voting-strategy.types';
 
 /**
@@ -46,14 +46,21 @@ export class VotingStrategyService {
     voter: Player,
     persona: AIPersona,
     game: Game,
-    suspicionData: Map<number, SuspicionData>
+    suspicionData: Map<number, SuspicionData>,
   ): Promise<VotingDecision> {
-    this.logger.log(`Calculating vote for player ${voter.name} (${voter.role})`);
+    this.logger.log(
+      `Calculating vote for player ${voter.name} (${voter.role})`,
+    );
 
-    const context = this.createVotingContext(voter, persona, game, suspicionData);
+    const context = this.createVotingContext(
+      voter,
+      persona,
+      game,
+      suspicionData,
+    );
     const strategy = this.getVotingStrategy(voter.role, persona, context);
     const candidates = this.getVotingCandidates(game, voter);
-    
+
     // 후보가 없는 경우 처리
     if (candidates.length === 0) {
       return {
@@ -65,16 +72,26 @@ export class VotingStrategyService {
         expectedOutcome: {
           type: 'no_elimination',
           probability: 1,
-          teamImpact: { mafiaImpact: 0, citizenImpact: 0, explanation: 'No candidates' },
-          gameStateChange: { suspicionChanges: [], informationReveal: [], allianceChanges: [] }
+          teamImpact: {
+            mafiaImpact: 0,
+            citizenImpact: 0,
+            explanation: 'No candidates',
+          },
+          gameStateChange: {
+            suspicionChanges: [],
+            informationReveal: [],
+            allianceChanges: [],
+          },
         },
-        alternatives: []
+        alternatives: [],
       };
     }
 
     // 각 후보에 대한 점수 계산
     const scoredCandidates = await Promise.all(
-      candidates.map(candidate => this.calculateVotingScore(candidate, context, strategy))
+      candidates.map((candidate) =>
+        this.calculateVotingScore(candidate, context, strategy),
+      ),
     );
 
     // 점수순으로 정렬
@@ -82,8 +99,10 @@ export class VotingStrategyService {
 
     // 최적 선택 결정
     const bestCandidate = scoredCandidates[0];
-    const alternatives = this.generateAlternatives(scoredCandidates.slice(1, 4));
-    
+    const alternatives = this.generateAlternatives(
+      scoredCandidates.slice(1, 4),
+    );
+
     // 투표 결정 생성
     const decision: VotingDecision = {
       target: bestCandidate.player,
@@ -92,11 +111,13 @@ export class VotingStrategyService {
       shouldExplain: this.shouldExplainVote(persona, bestCandidate),
       priority: this.calculatePriority(bestCandidate, context),
       expectedOutcome: this.predictOutcome(bestCandidate, context),
-      alternatives
+      alternatives,
     };
 
-    this.logger.log(`Vote decision: ${voter.name} -> ${decision.target.name} (confidence: ${decision.confidence})`);
-    
+    this.logger.log(
+      `Vote decision: ${voter.name} -> ${decision.target.name} (confidence: ${decision.confidence})`,
+    );
+
     return decision;
   }
 
@@ -106,7 +127,7 @@ export class VotingStrategyService {
   async generateVoteExplanation(
     decision: VotingDecision,
     context: VotingContext,
-    style: ExplanationStyle = this.getDefaultExplanationStyle(context.persona)
+    style: ExplanationStyle = this.getDefaultExplanationStyle(context.persona),
   ): Promise<GeneratedVoteExplanation> {
     this.logger.log(`Generating vote explanation for ${context.voter.name}`);
 
@@ -115,13 +136,16 @@ export class VotingStrategyService {
       votingContext: context,
       explanationStyle: style,
       audience: 'all_players',
-      length: 'brief'
+      length: 'brief',
     };
 
     const mainExplanation = this.buildMainExplanation(explanationContext);
     const keyReasons = this.extractKeyReasons(decision);
     const supportingDetails = this.buildSupportingDetails(explanationContext);
-    const emotionalTone = this.determineEmotionalTone(context.persona, decision);
+    const emotionalTone = this.determineEmotionalTone(
+      context.persona,
+      decision,
+    );
     const expectedReactions = this.predictPlayerReactions(decision, context);
 
     return {
@@ -129,7 +153,7 @@ export class VotingStrategyService {
       keyReasons,
       supportingDetails,
       emotionalTone,
-      expectedReactions
+      expectedReactions,
     };
   }
 
@@ -138,7 +162,7 @@ export class VotingStrategyService {
    */
   async simulateVoting(
     context: VotingContext,
-    scenarios: number = 5
+    scenarios: number = 5,
   ): Promise<VotingSimulation> {
     this.logger.log(`Running voting simulation with ${scenarios} scenarios`);
 
@@ -156,7 +180,7 @@ export class VotingStrategyService {
       context.voter,
       context.persona,
       context.game,
-      context.suspicionData
+      context.suspicionData,
     );
 
     const confidence = this.calculateSimulationConfidence(votingScenarios);
@@ -166,7 +190,7 @@ export class VotingStrategyService {
       scenarios: votingScenarios,
       optimalChoice,
       confidence,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -185,13 +209,13 @@ export class VotingStrategyService {
     voter: Player,
     decision: VotingDecision,
     actualOutcome: any,
-    gameResult: any
+    gameResult: any,
   ): void {
     this.logger.log(`Learning from voting result for player ${voter.name}`);
-    
+
     // 실제 구현에서는 머신러닝이나 통계적 학습을 통해
     // 투표 전략을 개선하는 로직이 들어갈 수 있음
-    
+
     const strategy = this.roleStrategies.get(voter.role);
     if (strategy) {
       // 전략 조정 로직
@@ -205,11 +229,13 @@ export class VotingStrategyService {
     voter: Player,
     persona: AIPersona,
     game: Game,
-    suspicionData: Map<number, SuspicionData>
+    suspicionData: Map<number, SuspicionData>,
   ): VotingContext {
-    const candidates = game.players.filter(p => p.id !== voter.id && p.isAlive);
+    const candidates = game.players.filter(
+      (p) => p.id !== voter.id && p.isAlive,
+    );
     const existingVotes = new Map<number, number>(); // 실제로는 현재 투표 상황을 가져와야 함
-    
+
     return {
       game,
       voter,
@@ -221,15 +247,19 @@ export class VotingStrategyService {
         phase: game.currentPhase,
         dayCount: game.dayCount,
         alivePlayersCount: game.getAlivePlayers().length,
-        recentEvents: []
+        recentEvents: [],
       },
       existingVotes,
       timeRemaining: 60, // 임시값
-      additionalInfo: {}
+      additionalInfo: {},
     };
   }
 
-  private getVotingStrategy(role: GameRole, persona: AIPersona, context: VotingContext): VotingStrategy {
+  private getVotingStrategy(
+    role: GameRole,
+    persona: AIPersona,
+    context: VotingContext,
+  ): VotingStrategy {
     const baseStrategy = this.roleStrategies.get(role);
     if (!baseStrategy) {
       return this.getDefaultStrategy();
@@ -238,20 +268,24 @@ export class VotingStrategyService {
     // 페르소나와 상황에 따른 전략 조정
     const adjustedStrategy: VotingStrategy = {
       ...baseStrategy,
-      riskTolerance: baseStrategy.riskTolerance * (1 + persona.personality.aggression * 0.3),
-      analysisDepth: baseStrategy.analysisDepth * (1 + persona.personality.analytical * 0.2),
-      teamworkFactor: baseStrategy.teamworkFactor * (1 + persona.playStyle.teamplayPreference * 0.4),
-      suspicionThreshold: baseStrategy.suspicionThreshold * (1 - persona.personality.trust * 0.2)
+      riskTolerance:
+        baseStrategy.riskTolerance * (1 + persona.personality.aggression * 0.3),
+      analysisDepth:
+        baseStrategy.analysisDepth * (1 + persona.personality.analytical * 0.2),
+      teamworkFactor:
+        baseStrategy.teamworkFactor *
+        (1 + persona.playStyle.teamplayPreference * 0.4),
+      suspicionThreshold:
+        baseStrategy.suspicionThreshold * (1 - persona.personality.trust * 0.2),
     };
 
     return adjustedStrategy;
   }
 
   private getVotingCandidates(game: Game, voter: Player): Player[] {
-    return game.players.filter(p => 
-      p.id !== voter.id && 
-      p.isAlive && 
-      !this.isProtectedPlayer(p, voter)
+    return game.players.filter(
+      (p) =>
+        p.id !== voter.id && p.isAlive && !this.isProtectedPlayer(p, voter),
     );
   }
 
@@ -260,7 +294,7 @@ export class VotingStrategyService {
     if (voter.role === 'mafia' && candidate.role === 'mafia') {
       return true;
     }
-    
+
     // 기타 보호 조건들
     return false;
   }
@@ -268,11 +302,16 @@ export class VotingStrategyService {
   private async calculateVotingScore(
     candidate: Player,
     context: VotingContext,
-    strategy: VotingStrategy
+    strategy: VotingStrategy,
   ): Promise<VoteScoreResult> {
     const suspicionData = context.suspicionData.get(candidate.id);
-    
-    const scoreBreakdown = this.calculateScoreBreakdown(candidate, context, strategy, suspicionData);
+
+    const scoreBreakdown = this.calculateScoreBreakdown(
+      candidate,
+      context,
+      strategy,
+      suspicionData,
+    );
     const totalScore = this.calculateTotalScore(scoreBreakdown, strategy);
     const reasons = this.generateVoteReasons(candidate, context, suspicionData);
     const riskAssessment = this.assessRisk(candidate, context, strategy);
@@ -282,7 +321,7 @@ export class VotingStrategyService {
       totalScore,
       scoreBreakdown,
       reasons,
-      riskAssessment
+      riskAssessment,
     };
   }
 
@@ -290,12 +329,20 @@ export class VotingStrategyService {
     candidate: Player,
     context: VotingContext,
     strategy: VotingStrategy,
-    suspicionData?: SuspicionData
+    suspicionData?: SuspicionData,
   ): ScoreBreakdown {
     const suspicionScore = suspicionData ? suspicionData.level * 10 : 1;
-    const strategicValue = this.calculateStrategicValue(candidate, context, strategy);
+    const strategicValue = this.calculateStrategicValue(
+      candidate,
+      context,
+      strategy,
+    );
     const riskScore = this.calculateRiskScore(candidate, context);
-    const teamworkScore = this.calculateTeamworkScore(candidate, context, strategy);
+    const teamworkScore = this.calculateTeamworkScore(
+      candidate,
+      context,
+      strategy,
+    );
     const informationValue = this.calculateInformationValue(candidate, context);
     const timingScore = this.calculateTimingScore(candidate, context);
     const miscBonus = this.calculateMiscBonus(candidate, context);
@@ -307,11 +354,14 @@ export class VotingStrategyService {
       teamworkScore,
       informationValue,
       timingScore,
-      miscBonus
+      miscBonus,
     };
   }
 
-  private calculateTotalScore(breakdown: ScoreBreakdown, strategy: VotingStrategy): number {
+  private calculateTotalScore(
+    breakdown: ScoreBreakdown,
+    strategy: VotingStrategy,
+  ): number {
     const weights = {
       suspicion: 0.4,
       strategic: 0.25,
@@ -319,7 +369,7 @@ export class VotingStrategyService {
       teamwork: 0.2 * strategy.teamworkFactor,
       information: 0.1 * strategy.analysisDepth,
       timing: 0.1,
-      misc: 0.05
+      misc: 0.05,
     };
 
     return (
@@ -333,7 +383,11 @@ export class VotingStrategyService {
     );
   }
 
-  private calculateStrategicValue(candidate: Player, context: VotingContext, strategy: VotingStrategy): number {
+  private calculateStrategicValue(
+    candidate: Player,
+    context: VotingContext,
+    strategy: VotingStrategy,
+  ): number {
     let value = 5; // 기본값
 
     // 역할별 전략적 가치 계산
@@ -354,7 +408,10 @@ export class VotingStrategyService {
     return value;
   }
 
-  private calculateRiskScore(candidate: Player, context: VotingContext): number {
+  private calculateRiskScore(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     let risk = 0;
 
     // 잘못된 투표의 위험성 평가
@@ -363,14 +420,21 @@ export class VotingStrategyService {
     }
 
     // 보복 위험
-    if (candidate.role === 'mafia' && context.gameContext.alivePlayersCount <= 4) {
+    if (
+      candidate.role === 'mafia' &&
+      context.gameContext.alivePlayersCount <= 4
+    ) {
       risk += 2; // 게임 후반 마피아 투표의 보복 위험
     }
 
     return risk;
   }
 
-  private calculateTeamworkScore(candidate: Player, context: VotingContext, strategy: VotingStrategy): number {
+  private calculateTeamworkScore(
+    candidate: Player,
+    context: VotingContext,
+    strategy: VotingStrategy,
+  ): number {
     let score = 5;
 
     // 팀 협력 점수 계산
@@ -383,7 +447,10 @@ export class VotingStrategyService {
     return score;
   }
 
-  private calculateInformationValue(candidate: Player, context: VotingContext): number {
+  private calculateInformationValue(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     let value = 5;
 
     // 정보 획득 가치 평가
@@ -395,7 +462,10 @@ export class VotingStrategyService {
     return value;
   }
 
-  private calculateTimingScore(candidate: Player, context: VotingContext): number {
+  private calculateTimingScore(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     let score = 5;
 
     // 타이밍 적절성 평가
@@ -407,7 +477,10 @@ export class VotingStrategyService {
     return score;
   }
 
-  private calculateMiscBonus(candidate: Player, context: VotingContext): number {
+  private calculateMiscBonus(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     let bonus = 0;
 
     // 기타 보너스 요소들
@@ -422,7 +495,7 @@ export class VotingStrategyService {
   private generateVoteReasons(
     candidate: Player,
     context: VotingContext,
-    suspicionData?: SuspicionData
+    suspicionData?: SuspicionData,
   ): VoteReason[] {
     const reasons: VoteReason[] = [];
 
@@ -432,7 +505,7 @@ export class VotingStrategyService {
         description: `High suspicion level (${Math.round(suspicionData.level * 100)}%)`,
         confidence: suspicionData.confidence,
         weight: 0.4,
-        evidence: suspicionData.reasons.map(r => r.description)
+        evidence: suspicionData.reasons.map((r) => r.description),
       });
     }
 
@@ -442,16 +515,23 @@ export class VotingStrategyService {
         description: 'Strategic elimination of non-mafia player',
         confidence: 0.8,
         weight: 0.3,
-        evidence: ['Role-based strategic decision']
+        evidence: ['Role-based strategic decision'],
       });
     }
 
     return reasons;
   }
 
-  private assessRisk(candidate: Player, context: VotingContext, strategy: VotingStrategy): RiskAssessment {
+  private assessRisk(
+    candidate: Player,
+    context: VotingContext,
+    strategy: VotingStrategy,
+  ): RiskAssessment {
     const overallRisk = this.calculateOverallRisk(candidate, context);
-    const identityExposureRisk = this.calculateIdentityExposureRisk(candidate, context);
+    const identityExposureRisk = this.calculateIdentityExposureRisk(
+      candidate,
+      context,
+    );
     const retaliationRisk = this.calculateRetaliationRisk(candidate, context);
     const misjudgmentRisk = this.calculateMisjudgmentRisk(candidate, context);
     const teamLossRisk = this.calculateTeamLossRisk(candidate, context);
@@ -462,16 +542,22 @@ export class VotingStrategyService {
       retaliationRisk,
       misjudgmentRisk,
       teamLossRisk,
-      mitigation: this.generateRiskMitigation(candidate, context)
+      mitigation: this.generateRiskMitigation(candidate, context),
     };
   }
 
-  private calculateOverallRisk(candidate: Player, context: VotingContext): number {
+  private calculateOverallRisk(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     // 종합 위험도 계산
     return 0.5; // 임시 구현
   }
 
-  private calculateIdentityExposureRisk(candidate: Player, context: VotingContext): number {
+  private calculateIdentityExposureRisk(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     // 신원 노출 위험 계산
     if (context.voter.role === 'mafia' && candidate.role === 'citizen') {
       return 0.3; // 마피아가 시민을 투표할 때의 노출 위험
@@ -479,17 +565,26 @@ export class VotingStrategyService {
     return 0.1;
   }
 
-  private calculateRetaliationRisk(candidate: Player, context: VotingContext): number {
+  private calculateRetaliationRisk(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     // 보복 위험 계산
     return 0.2; // 임시 구현
   }
 
-  private calculateMisjudgmentRisk(candidate: Player, context: VotingContext): number {
+  private calculateMisjudgmentRisk(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     // 오판 위험 계산
     return 0.3; // 임시 구현
   }
 
-  private calculateTeamLossRisk(candidate: Player, context: VotingContext): number {
+  private calculateTeamLossRisk(
+    candidate: Player,
+    context: VotingContext,
+  ): number {
     // 팀 손실 위험 계산
     if (context.voter.role === candidate.role) {
       return 0.8; // 같은 팀원 투표의 높은 위험
@@ -497,25 +592,34 @@ export class VotingStrategyService {
     return 0.1;
   }
 
-  private generateRiskMitigation(candidate: Player, context: VotingContext): string[] {
+  private generateRiskMitigation(
+    candidate: Player,
+    context: VotingContext,
+  ): string[] {
     const mitigation: string[] = [];
-    
+
     mitigation.push('Provide solid reasoning for the vote');
-    mitigation.push('Monitor other players\' reactions');
-    
+    mitigation.push("Monitor other players' reactions");
+
     if (context.voter.role === 'mafia') {
       mitigation.push('Coordinate with team members');
     }
-    
+
     return mitigation;
   }
 
-  private calculateConfidence(bestCandidate: VoteScoreResult, strategy: VotingStrategy): number {
+  private calculateConfidence(
+    bestCandidate: VoteScoreResult,
+    strategy: VotingStrategy,
+  ): number {
     const baseConfidence = Math.min(1, bestCandidate.totalScore / 10);
-    const riskAdjustment = 1 - (bestCandidate.riskAssessment.overallRisk * 0.3);
+    const riskAdjustment = 1 - bestCandidate.riskAssessment.overallRisk * 0.3;
     const strategyConfidence = strategy.riskTolerance;
-    
-    return Math.max(0.1, Math.min(1, baseConfidence * riskAdjustment * strategyConfidence));
+
+    return Math.max(
+      0.1,
+      Math.min(1, baseConfidence * riskAdjustment * strategyConfidence),
+    );
   }
 
   private generateReasoning(candidate: VoteScoreResult): string {
@@ -526,48 +630,69 @@ export class VotingStrategyService {
     return `Voting for ${candidate.player.name} based on strategic analysis`;
   }
 
-  private shouldExplainVote(persona: AIPersona, candidate: VoteScoreResult): boolean {
+  private shouldExplainVote(
+    persona: AIPersona,
+    candidate: VoteScoreResult,
+  ): boolean {
     // 성격과 상황에 따른 설명 필요성 판단
-    const needsExplanation = 
+    const needsExplanation =
       persona.personality.analytical > 0.6 || // 분석적인 성격은 설명을 선호
       persona.personality.emotional < 0.3 || // 감정적이지 않은 플레이어는 논리적 설명
       persona.communicationStyle.verbosity > 0.6 || // 말 많은 성격
       candidate.riskAssessment.overallRisk > 0.7 ||
       candidate.totalScore < 6;
-    
+
     return needsExplanation;
   }
 
-  private calculatePriority(candidate: VoteScoreResult, context: VotingContext): number {
+  private calculatePriority(
+    candidate: VoteScoreResult,
+    context: VotingContext,
+  ): number {
     // 점수를 1-10 우선순위로 변환
-    let basePriority = Math.max(1, Math.min(10, Math.round(candidate.totalScore)));
-    
+    let basePriority = Math.max(
+      1,
+      Math.min(10, Math.round(candidate.totalScore)),
+    );
+
     // 게임 후반부에는 우선순위 증가
     const dayCount = context.gameContext.dayCount || context.game.dayCount;
     if (dayCount >= 4) {
       basePriority = Math.min(10, basePriority + 2); // 후반부 보너스
     }
-    
+
     return basePriority;
   }
 
-  private predictOutcome(candidate: VoteScoreResult, context: VotingContext): VotingOutcome {
-    const eliminationProbability = this.calculateEliminationProbability(candidate, context);
-    
+  private predictOutcome(
+    candidate: VoteScoreResult,
+    context: VotingContext,
+  ): VotingOutcome {
+    const eliminationProbability = this.calculateEliminationProbability(
+      candidate,
+      context,
+    );
+
     return {
       type: eliminationProbability > 0.5 ? 'elimination' : 'tie',
       probability: eliminationProbability,
       teamImpact: this.calculateTeamImpact(candidate, context),
-      gameStateChange: this.predictGameStateChange(candidate, context)
+      gameStateChange: this.predictGameStateChange(candidate, context),
     };
   }
 
-  private calculateEliminationProbability(candidate: VoteScoreResult, context: VotingContext): number {
+  private calculateEliminationProbability(
+    candidate: VoteScoreResult,
+    context: VotingContext,
+  ): number {
     // 제거 확률 계산 (다른 플레이어들의 투표 성향 고려)
     return 0.7; // 임시 구현
   }
 
-  private calculateTeamImpact(candidate: VoteScoreResult, context: VotingContext): TeamImpact {
+  private calculateTeamImpact(
+    candidate: VoteScoreResult,
+    context: VotingContext,
+  ): TeamImpact {
     let mafiaImpact = 0;
     let citizenImpact = 0;
     let explanation = '';
@@ -585,20 +710,25 @@ export class VotingStrategyService {
     return { mafiaImpact, citizenImpact, explanation };
   }
 
-  private predictGameStateChange(candidate: VoteScoreResult, context: VotingContext): GameStateChange {
+  private predictGameStateChange(
+    candidate: VoteScoreResult,
+    context: VotingContext,
+  ): GameStateChange {
     return {
       suspicionChanges: [],
       informationReveal: [],
-      allianceChanges: []
+      allianceChanges: [],
     };
   }
 
-  private generateAlternatives(scoredCandidates: VoteScoreResult[]): AlternativeVote[] {
-    return scoredCandidates.map(candidate => ({
+  private generateAlternatives(
+    scoredCandidates: VoteScoreResult[],
+  ): AlternativeVote[] {
+    return scoredCandidates.map((candidate) => ({
       target: candidate.player,
       score: candidate.totalScore,
       reason: candidate.reasons[0]?.description || 'Alternative choice',
-      conditional: false
+      conditional: false,
     }));
   }
 
@@ -625,9 +755,9 @@ export class VotingStrategyService {
           type: 'misdirection',
           weight: 0.8,
           description: 'Create false leads',
-          applicableConditions: ['high_suspicion', 'information_pressure']
-        }
-      ]
+          applicableConditions: ['high_suspicion', 'information_pressure'],
+        },
+      ],
     });
 
     // 경찰 전략
@@ -635,7 +765,11 @@ export class VotingStrategyService {
       name: 'Police Strategy',
       description: 'Use investigation results to eliminate mafia',
       applicableRoles: ['police'],
-      priorities: ['use_investigation_results', 'eliminate_suspected_mafia', 'protect_identity'],
+      priorities: [
+        'use_investigation_results',
+        'eliminate_suspected_mafia',
+        'protect_identity',
+      ],
       riskTolerance: 0.4,
       analysisDepth: 0.9,
       teamworkFactor: 0.6,
@@ -645,9 +779,9 @@ export class VotingStrategyService {
           type: 'information_warfare',
           weight: 0.9,
           description: 'Leverage investigation information strategically',
-          applicableConditions: ['has_investigation_info']
-        }
-      ]
+          applicableConditions: ['has_investigation_info'],
+        },
+      ],
     });
 
     // 의사 전략
@@ -665,9 +799,9 @@ export class VotingStrategyService {
           type: 'timing',
           weight: 0.7,
           description: 'Time reveals carefully',
-          applicableConditions: ['endgame', 'critical_situation']
-        }
-      ]
+          applicableConditions: ['endgame', 'critical_situation'],
+        },
+      ],
     });
 
     // 시민 전략
@@ -675,7 +809,11 @@ export class VotingStrategyService {
       name: 'Citizen Strategy',
       description: 'Follow evidence and eliminate suspicious players',
       applicableRoles: ['citizen'],
-      priorities: ['follow_evidence', 'trust_confirmed_roles', 'eliminate_suspicious'],
+      priorities: [
+        'follow_evidence',
+        'trust_confirmed_roles',
+        'eliminate_suspicious',
+      ],
       riskTolerance: 0.5,
       analysisDepth: 0.5,
       teamworkFactor: 0.7,
@@ -685,9 +823,9 @@ export class VotingStrategyService {
           type: 'alliance_building',
           weight: 0.6,
           description: 'Build trust with other citizens',
-          applicableConditions: ['midgame', 'confusion']
-        }
-      ]
+          applicableConditions: ['midgame', 'confusion'],
+        },
+      ],
     });
   }
 
@@ -706,7 +844,7 @@ export class VotingStrategyService {
       analysisDepth: 0.5,
       teamworkFactor: 0.5,
       suspicionThreshold: 0.5,
-      strategicConsiderations: []
+      strategicConsiderations: [],
     };
   }
 
@@ -716,7 +854,7 @@ export class VotingStrategyService {
       directness: persona.communicationStyle.directness,
       emotionality: persona.personality.emotional,
       logicalStructure: persona.personality.analytical,
-      includePersonalOpinion: persona.communicationStyle.verbosity > 0.6
+      includePersonalOpinion: persona.communicationStyle.verbosity > 0.6,
     };
   }
 
@@ -724,7 +862,7 @@ export class VotingStrategyService {
     const { decision, votingContext } = context;
     const target = decision.target.name;
     const confidence = Math.round(decision.confidence * 100);
-    
+
     return `I'm voting for ${target} (${confidence}% confidence). ${decision.reasoning}`;
   }
 
@@ -733,7 +871,7 @@ export class VotingStrategyService {
     return [
       'High suspicion level',
       'Strategic necessity',
-      'Evidence-based decision'
+      'Evidence-based decision',
     ].slice(0, 2); // 최대 2개의 주요 이유
   }
 
@@ -741,11 +879,14 @@ export class VotingStrategyService {
     // 보조 설명 생성
     return [
       'Based on behavioral analysis',
-      'Consistent with previous observations'
+      'Consistent with previous observations',
     ];
   }
 
-  private determineEmotionalTone(persona: AIPersona, decision: VotingDecision): 'neutral' | 'confident' | 'hesitant' | 'defensive' | 'aggressive' {
+  private determineEmotionalTone(
+    persona: AIPersona,
+    decision: VotingDecision,
+  ): 'neutral' | 'confident' | 'hesitant' | 'defensive' | 'aggressive' {
     if (decision.confidence > 0.8) {
       return persona.personality.aggression > 0.6 ? 'aggressive' : 'confident';
     } else if (decision.confidence < 0.4) {
@@ -755,17 +896,23 @@ export class VotingStrategyService {
     }
   }
 
-  private predictPlayerReactions(decision: VotingDecision, context: VotingContext): any[] {
+  private predictPlayerReactions(
+    decision: VotingDecision,
+    context: VotingContext,
+  ): any[] {
     // 플레이어 반응 예측
     return []; // 임시 구현
   }
 
-  private async generateVotingScenario(context: VotingContext, scenarioIndex: number): Promise<VotingScenario> {
+  private async generateVotingScenario(
+    context: VotingContext,
+    scenarioIndex: number,
+  ): Promise<VotingScenario> {
     // 투표 시나리오 생성
     const voteDistribution = new Map<number, number>();
-    
+
     // 임시 구현
-    context.candidates.forEach(candidate => {
+    context.candidates.forEach((candidate) => {
       voteDistribution.set(candidate.id, Math.floor(Math.random() * 3));
     });
 
@@ -778,11 +925,11 @@ export class VotingStrategyService {
         gameStateChange: {
           suspicionChanges: [],
           informationReveal: [],
-          allianceChanges: []
+          allianceChanges: [],
         },
         teamBenefits: new Map(),
-        followUpEffects: []
-      }
+        followUpEffects: [],
+      },
     };
   }
 
@@ -795,7 +942,7 @@ export class VotingStrategyService {
     strategy: VotingStrategy,
     decision: VotingDecision,
     actualOutcome: any,
-    gameResult: any
+    gameResult: any,
   ): void {
     // 전략 학습 및 조정
     // 실제 구현에서는 성과를 기반으로 전략을 개선

@@ -26,19 +26,19 @@ export interface ChatDecision {
  * 채팅 트리거 이유
  */
 export type ChatTriggerReason =
-  | 'phase_start'           // 페이즈 시작
-  | 'direct_mention'        // 직접 언급됨
-  | 'accused'               // 의심받음
-  | 'defend_self'           // 자기 방어 필요
-  | 'defend_other'          // 다른 플레이어 방어
-  | 'share_suspicion'       // 의심 공유
-  | 'vote_persuasion'       // 투표 설득
-  | 'information_response'  // 정보 요청에 응답
-  | 'personality_driven'    // 성격 기반 자발적 발언
-  | 'silence_break'         // 긴 침묵 깨기
-  | 'bandwagon'            // 분위기 편승
-  | 'role_hint'            // 역할 암시
-  | 'game_progress';        // 게임 진행 관련
+  | 'phase_start' // 페이즈 시작
+  | 'direct_mention' // 직접 언급됨
+  | 'accused' // 의심받음
+  | 'defend_self' // 자기 방어 필요
+  | 'defend_other' // 다른 플레이어 방어
+  | 'share_suspicion' // 의심 공유
+  | 'vote_persuasion' // 투표 설득
+  | 'information_response' // 정보 요청에 응답
+  | 'personality_driven' // 성격 기반 자발적 발언
+  | 'silence_break' // 긴 침묵 깨기
+  | 'bandwagon' // 분위기 편승
+  | 'role_hint' // 역할 암시
+  | 'game_progress'; // 게임 진행 관련
 
 /**
  * 대화 참여 패턴
@@ -80,17 +80,17 @@ export interface MessageAnalysis {
  * 메시지 주제 분류
  */
 export type MessageTopic =
-  | 'suspicion'      // 의심 표현
-  | 'defense'        // 방어 논리
-  | 'information'    // 정보 공유
+  | 'suspicion' // 의심 표현
+  | 'defense' // 방어 논리
+  | 'information' // 정보 공유
   | 'vote_discussion' // 투표 관련
-  | 'role_hint'      // 역할 암시
-  | 'small_talk'     // 잡담
-  | 'strategy'       // 전략 논의
-  | 'accusation'     // 직접적 고발
-  | 'support'        // 지지 표명
-  | 'confusion'      // 혼란 표현
-  | 'meta_game';     // 게임 진행 관련
+  | 'role_hint' // 역할 암시
+  | 'small_talk' // 잡담
+  | 'strategy' // 전략 논의
+  | 'accusation' // 직접적 고발
+  | 'support' // 지지 표명
+  | 'confusion' // 혼란 표현
+  | 'meta_game'; // 게임 진행 관련
 
 /**
  * 채팅 생성 컨텍스트
@@ -134,13 +134,13 @@ export interface ConversationState {
  * 대화 분위기 수준
  */
 export type AtmosphereLevel =
-  | 'calm'          // 평온함
-  | 'tense'         // 긴장감
-  | 'heated'        // 격렬함
-  | 'suspicious'    // 의심스러운 분위기
-  | 'panicked'      // 공황 상태
-  | 'analytical'    // 분석적 분위기
-  | 'casual';       // 가벼운 분위기
+  | 'calm' // 평온함
+  | 'tense' // 긴장감
+  | 'heated' // 격렬함
+  | 'suspicious' // 의심스러운 분위기
+  | 'panicked' // 공황 상태
+  | 'analytical' // 분석적 분위기
+  | 'casual'; // 가벼운 분위기
 
 /**
  * 채팅 응답 생성 결과
@@ -164,16 +164,16 @@ export interface ChatResponse {
  * 감정 상태
  */
 export type EmotionState =
-  | 'neutral'       // 중립
-  | 'confident'     // 자신감 있음
-  | 'nervous'       // 긴장함
-  | 'aggressive'    // 공격적
-  | 'defensive'     // 방어적
-  | 'suspicious'    // 의심스러움
-  | 'supportive'    // 지지적
-  | 'confused'      // 혼란스러움
-  | 'excited'       // 흥분함
-  | 'worried';      // 걱정됨
+  | 'neutral' // 중립
+  | 'confident' // 자신감 있음
+  | 'nervous' // 긴장함
+  | 'aggressive' // 공격적
+  | 'defensive' // 방어적
+  | 'suspicious' // 의심스러움
+  | 'supportive' // 지지적
+  | 'confused' // 혼란스러움
+  | 'excited' // 흥분함
+  | 'worried'; // 걱정됨
 
 /**
  * 채팅 패턴 설정

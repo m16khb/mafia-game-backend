@@ -40,16 +40,16 @@ export interface SuspicionReason {
   evidence?: SuspicionEvidence;
 }
 
-export type SuspicionReasonType = 
-  | 'voting_pattern'      // 투표 패턴 분석
-  | 'chat_analysis'       // 채팅 행동 분석
-  | 'night_survival'      // 밤 생존 패턴
-  | 'role_claim'          // 역할 주장 관련
-  | 'defense_pattern'     // 방어 패턴
-  | 'accusation_timing'   // 의심 제기 타이밍
-  | 'team_coordination'   // 팀 협조 패턴
+export type SuspicionReasonType =
+  | 'voting_pattern' // 투표 패턴 분석
+  | 'chat_analysis' // 채팅 행동 분석
+  | 'night_survival' // 밤 생존 패턴
+  | 'role_claim' // 역할 주장 관련
+  | 'defense_pattern' // 방어 패턴
+  | 'accusation_timing' // 의심 제기 타이밍
+  | 'team_coordination' // 팀 협조 패턴
   | 'information_sharing' // 정보 공유 패턴
-  | 'reaction_speed'      // 반응 속도
+  | 'reaction_speed' // 반응 속도
   | 'emotional_response'; // 감정적 반응
 
 /**

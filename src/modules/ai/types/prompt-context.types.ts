@@ -58,7 +58,12 @@ export interface VotePromptContext {
  */
 export interface GameEvent {
   /** 이벤트 타입 */
-  type: 'player_death' | 'role_reveal' | 'phase_change' | 'vote_result' | 'night_action';
+  type:
+    | 'player_death'
+    | 'role_reveal'
+    | 'phase_change'
+    | 'vote_result'
+    | 'night_action';
   /** 이벤트 설명 */
   description: string;
   /** 이벤트가 발생한 시점 */
@@ -80,32 +85,37 @@ export interface ConversationContext {
   /** 대화 시작 시점 */
   conversationStart: Date;
   /** 대화의 감정적 톤 */
-  emotionalTone: 'neutral' | 'tense' | 'accusatory' | 'defensive' | 'cooperative';
+  emotionalTone:
+    | 'neutral'
+    | 'tense'
+    | 'accusatory'
+    | 'defensive'
+    | 'cooperative';
 }
 
 /**
  * 대화 주제 분류
  */
-export type ConversationTopic = 
-  | 'role_discussion'      // 역할 관련 논의
-  | 'suspicion_sharing'    // 의심 공유
-  | 'vote_coordination'    // 투표 조율
-  | 'defense_argument'     // 방어 논증
-  | 'information_sharing'  // 정보 공유
-  | 'small_talk'          // 잡담
+export type ConversationTopic =
+  | 'role_discussion' // 역할 관련 논의
+  | 'suspicion_sharing' // 의심 공유
+  | 'vote_coordination' // 투표 조율
+  | 'defense_argument' // 방어 논증
+  | 'information_sharing' // 정보 공유
+  | 'small_talk' // 잡담
   | 'strategy_discussion'; // 전략 논의
 
 /**
  * 채팅 생성 트리거
  */
 export type ChatTrigger =
-  | 'phase_start'          // 페이즈 시작
-  | 'response_to_message'  // 메시지에 대한 응답
-  | 'spontaneous'          // 자발적 발언
-  | 'accusation_defense'   // 의심받을 때 방어
-  | 'information_share'    // 정보 공유 목적
-  | 'vote_persuasion'      // 투표 설득
-  | 'role_hint';           // 역할 암시
+  | 'phase_start' // 페이즈 시작
+  | 'response_to_message' // 메시지에 대한 응답
+  | 'spontaneous' // 자발적 발언
+  | 'accusation_defense' // 의심받을 때 방어
+  | 'information_share' // 정보 공유 목적
+  | 'vote_persuasion' // 투표 설득
+  | 'role_hint'; // 역할 암시
 
 /**
  * 현재 투표 상황

@@ -14,7 +14,7 @@ import {
   BehaviorExecutionContext,
   BehaviorExecutionResult,
   PersonalityBehaviorModifier,
-  BehaviorModification
+  BehaviorModification,
 } from '../types/phase-behavior.types';
 
 /**
@@ -22,9 +22,15 @@ import {
  */
 @Injectable()
 export class PhaseBehaviorService {
-  private readonly rolePhaseConfigs = new Map<GameRole, Map<GamePhase, PhaseBehaviorPattern>>();
+  private readonly rolePhaseConfigs = new Map<
+    GameRole,
+    Map<GamePhase, PhaseBehaviorPattern>
+  >();
   private readonly phaseTransitions: PhaseTransitionBehavior[] = [];
-  private readonly situationResponses = new Map<SituationType, SituationResponse>();
+  private readonly situationResponses = new Map<
+    SituationType,
+    SituationResponse
+  >();
 
   constructor(private readonly logger: Logger) {
     this.logger.setContext(PhaseBehaviorService.name);
@@ -40,12 +46,12 @@ export class PhaseBehaviorService {
     game: Game,
     phase: GamePhase,
     aiPlayers: Player[],
-    personaMap: Map<number, AIPersona>
+    personaMap: Map<number, AIPersona>,
   ): Promise<BehaviorExecutionResult[]> {
     this.logger.log(`Executing phase start behaviors for ${phase}`);
-    
+
     const results: BehaviorExecutionResult[] = [];
-    
+
     for (const player of aiPlayers) {
       const persona = personaMap.get(player.id);
       if (!persona) continue;
@@ -60,13 +66,22 @@ export class PhaseBehaviorService {
         dayCount: game.dayCount,
         alivePlayers: game.getAlivePlayers().length,
         suspicionLevel: 0.3, // 임시값, 나중에 suspicion tracker에서 가져올 예정
-        recentEvents: [] // 임시값
+        recentEvents: [], // 임시값
       };
 
       for (const action of behaviorPattern.behaviors) {
-        const shouldExecute = await this.shouldExecuteAction(action, persona, context);
+        const shouldExecute = await this.shouldExecuteAction(
+          action,
+          persona,
+          context,
+        );
         if (shouldExecute) {
-          const result = await this.executeAction(action, player, persona, context);
+          const result = await this.executeAction(
+            action,
+            player,
+            persona,
+            context,
+          );
           results.push(result);
         }
       }
@@ -83,12 +98,12 @@ export class PhaseBehaviorService {
     fromPhase: GamePhase,
     toPhase: GamePhase,
     aiPlayers: Player[],
-    personaMap: Map<number, AIPersona>
+    personaMap: Map<number, AIPersona>,
   ): Promise<void> {
     this.logger.log(`Executing phase transition: ${fromPhase} -> ${toPhase}`);
 
     const transition = this.phaseTransitions.find(
-      t => t.fromPhase === fromPhase && t.toPhase === toPhase
+      (t) => t.fromPhase === fromPhase && t.toPhase === toPhase,
     );
 
     if (!transition) return;
@@ -105,11 +120,15 @@ export class PhaseBehaviorService {
           dayCount: game.dayCount,
           alivePlayers: game.getAlivePlayers().length,
           suspicionLevel: 0.3,
-          recentEvents: []
+          recentEvents: [],
         };
 
         for (const action of transition.actions) {
-          const shouldExecute = await this.shouldExecuteAction(action, persona, context);
+          const shouldExecute = await this.shouldExecuteAction(
+            action,
+            persona,
+            context,
+          );
           if (shouldExecute) {
             await this.executeAction(action, player, persona, context);
           }
@@ -125,7 +144,7 @@ export class PhaseBehaviorService {
     situation: SituationType,
     game: Game,
     aiPlayers: Player[],
-    personaMap: Map<number, AIPersona>
+    personaMap: Map<number, AIPersona>,
   ): Promise<void> {
     this.logger.log(`Executing situation response for: ${situation}`);
 
@@ -146,13 +165,21 @@ export class PhaseBehaviorService {
         dayCount: game.dayCount,
         alivePlayers: game.getAlivePlayers().length,
         suspicionLevel: 0.3,
-        recentEvents: []
+        recentEvents: [],
       };
 
       for (const action of roleActions) {
-        const modifiedAction = this.applyPersonalityModifiers(action, persona, response.personalityModifiers);
-        const shouldExecute = await this.shouldExecuteAction(modifiedAction, persona, context);
-        
+        const modifiedAction = this.applyPersonalityModifiers(
+          action,
+          persona,
+          response.personalityModifiers,
+        );
+        const shouldExecute = await this.shouldExecuteAction(
+          modifiedAction,
+          persona,
+          context,
+        );
+
         if (shouldExecute) {
           await this.executeAction(modifiedAction, player, persona, context);
         }
@@ -160,23 +187,34 @@ export class PhaseBehaviorService {
     }
   }
 
-  private getBehaviorPattern(role: GameRole, phase: GamePhase): PhaseBehaviorPattern | undefined {
+  private getBehaviorPattern(
+    role: GameRole,
+    phase: GamePhase,
+  ): PhaseBehaviorPattern | undefined {
     return this.rolePhaseConfigs.get(role)?.get(phase);
   }
 
   private async shouldExecuteAction(
     action: BehaviorAction,
     persona: AIPersona,
-    context: BehaviorExecutionContext
+    context: BehaviorExecutionContext,
   ): Promise<boolean> {
     // 기본 확률 계산
     let probability = action.probability;
 
     // 성격에 따른 확률 조정
-    probability = this.adjustProbabilityByPersonality(probability, action.type, persona);
+    probability = this.adjustProbabilityByPersonality(
+      probability,
+      action.type,
+      persona,
+    );
 
     // 상황에 따른 확률 조정
-    probability = this.adjustProbabilityByContext(probability, action.type, context);
+    probability = this.adjustProbabilityByContext(
+      probability,
+      action.type,
+      context,
+    );
 
     return Math.random() < probability;
   }
@@ -185,12 +223,12 @@ export class PhaseBehaviorService {
     action: BehaviorAction,
     player: Player,
     persona: AIPersona,
-    context: BehaviorExecutionContext
+    context: BehaviorExecutionContext,
   ): Promise<BehaviorExecutionResult> {
     const delay = this.calculateActionDelay(action, persona);
-    
+
     this.logger.log(
-      `Scheduling ${action.type} for player ${player.name} in ${delay}ms`
+      `Scheduling ${action.type} for player ${player.name} in ${delay}ms`,
     );
 
     // 실제 액션 실행은 타이머로 지연
@@ -203,7 +241,7 @@ export class PhaseBehaviorService {
       action,
       delayUsed: delay,
       reason: `Phase behavior: ${action.type}`,
-      followUpActions: this.getFollowUpActions(action, context)
+      followUpActions: this.getFollowUpActions(action, context),
     };
   }
 
@@ -211,10 +249,10 @@ export class PhaseBehaviorService {
     action: BehaviorAction,
     player: Player,
     persona: AIPersona,
-    context: BehaviorExecutionContext
+    context: BehaviorExecutionContext,
   ): void {
     this.logger.log(`Executing ${action.type} for player ${player.name}`);
-    
+
     // TODO: 실제 액션 실행 (채팅 생성, 투표 등)
     // 현재는 로그만 출력
     switch (action.type) {
@@ -231,45 +269,48 @@ export class PhaseBehaviorService {
     }
   }
 
-  private calculateActionDelay(action: BehaviorAction, persona: AIPersona): number {
+  private calculateActionDelay(
+    action: BehaviorAction,
+    persona: AIPersona,
+  ): number {
     const [minDelay, maxDelay] = action.delayRange;
     const baseDelay = minDelay + Math.random() * (maxDelay - minDelay);
-    
+
     // 성격에 따른 지연 조정
     const personalityFactor = this.getPersonalityDelayFactor(persona);
-    
+
     return Math.floor(baseDelay * personalityFactor);
   }
 
   private getPersonalityDelayFactor(persona: AIPersona): number {
     // 신중함이 높으면 더 오래 기다림
-    const cautionFactor = 1 + (persona.personality.caution * 0.5);
-    
+    const cautionFactor = 1 + persona.personality.caution * 0.5;
+
     // 감정적이면 더 빨리 반응
-    const emotionalFactor = 1 - (persona.personality.emotional * 0.3);
-    
+    const emotionalFactor = 1 - persona.personality.emotional * 0.3;
+
     return cautionFactor * emotionalFactor;
   }
 
   private adjustProbabilityByPersonality(
     baseProbability: number,
     actionType: BehaviorActionType,
-    persona: AIPersona
+    persona: AIPersona,
   ): number {
     let adjusted = baseProbability;
 
     switch (actionType) {
       case 'cast_suspicion':
-        adjusted *= (1 + persona.personality.aggression * 0.5);
+        adjusted *= 1 + persona.personality.aggression * 0.5;
         break;
       case 'defend_player':
-        adjusted *= (1 + persona.personality.trust * 0.3);
+        adjusted *= 1 + persona.personality.trust * 0.3;
         break;
       case 'initiate_discussion':
-        adjusted *= (1 + persona.personality.leadership * 0.4);
+        adjusted *= 1 + persona.personality.leadership * 0.4;
         break;
       case 'ask_question':
-        adjusted *= (1 + persona.personality.analytical * 0.3);
+        adjusted *= 1 + persona.personality.analytical * 0.3;
         break;
     }
 
@@ -279,7 +320,7 @@ export class PhaseBehaviorService {
   private adjustProbabilityByContext(
     baseProbability: number,
     actionType: BehaviorActionType,
-    context: BehaviorExecutionContext
+    context: BehaviorExecutionContext,
   ): number {
     let adjusted = baseProbability;
 
@@ -301,18 +342,18 @@ export class PhaseBehaviorService {
   private applyPersonalityModifiers(
     action: BehaviorAction,
     persona: AIPersona,
-    modifiers: PersonalityBehaviorModifier[]
+    modifiers: PersonalityBehaviorModifier[],
   ): BehaviorAction {
-    let modifiedAction = { ...action };
+    const modifiedAction = { ...action };
 
     for (const modifier of modifiers) {
       const traitValue = persona.personality[modifier.personalityTrait];
-      
+
       if (traitValue >= modifier.threshold) {
         modifiedAction.probability *= modifier.modifier.probabilityMultiplier;
         modifiedAction.delayRange = [
           modifiedAction.delayRange[0] * modifier.modifier.delayMultiplier,
-          modifiedAction.delayRange[1] * modifier.modifier.delayMultiplier
+          modifiedAction.delayRange[1] * modifier.modifier.delayMultiplier,
         ];
       }
     }
@@ -322,16 +363,18 @@ export class PhaseBehaviorService {
 
   private getFollowUpActions(
     action: BehaviorAction,
-    context: BehaviorExecutionContext
+    context: BehaviorExecutionContext,
   ): BehaviorAction[] | undefined {
     // 특정 액션 후 후속 액션 정의
     switch (action.type) {
       case 'cast_suspicion':
-        return [{
-          type: 'vote_explanation',
-          probability: 0.6,
-          delayRange: [5000, 15000]
-        }];
+        return [
+          {
+            type: 'vote_explanation',
+            probability: 0.6,
+            delayRange: [5000, 15000],
+          },
+        ];
       default:
         return undefined;
     }
@@ -340,27 +383,27 @@ export class PhaseBehaviorService {
   private initializeRoleBehaviors(): void {
     // 마피아 역할 행동 패턴
     const mafiaPatterns = new Map<GamePhase, PhaseBehaviorPattern>();
-    
+
     mafiaPatterns.set('day', {
       phase: 'day',
       behaviors: [
         {
           type: 'misdirection',
           probability: 0.7,
-          delayRange: [5000, 15000]
+          delayRange: [5000, 15000],
         },
         {
           type: 'cast_suspicion',
           probability: 0.5,
-          delayRange: [10000, 25000]
+          delayRange: [10000, 25000],
         },
         {
           type: 'defend_player',
           probability: 0.3,
-          delayRange: [8000, 20000]
-        }
+          delayRange: [8000, 20000],
+        },
       ],
-      priority: 1
+      priority: 1,
     });
 
     mafiaPatterns.set('voting', {
@@ -369,81 +412,81 @@ export class PhaseBehaviorService {
         {
           type: 'vote_explanation',
           probability: 0.8,
-          delayRange: [2000, 8000]
-        }
+          delayRange: [2000, 8000],
+        },
       ],
-      priority: 2
+      priority: 2,
     });
 
     this.rolePhaseConfigs.set('mafia', mafiaPatterns);
 
     // 시민 역할 행동 패턴
     const citizenPatterns = new Map<GamePhase, PhaseBehaviorPattern>();
-    
+
     citizenPatterns.set('day', {
       phase: 'day',
       behaviors: [
         {
           type: 'ask_question',
           probability: 0.4,
-          delayRange: [8000, 20000]
+          delayRange: [8000, 20000],
         },
         {
           type: 'share_information',
           probability: 0.3,
-          delayRange: [10000, 25000]
+          delayRange: [10000, 25000],
         },
         {
           type: 'initiate_discussion',
           probability: 0.6,
-          delayRange: [5000, 15000]
-        }
+          delayRange: [5000, 15000],
+        },
       ],
-      priority: 1
+      priority: 1,
     });
 
     this.rolePhaseConfigs.set('citizen', citizenPatterns);
 
     // 경찰 역할 행동 패턴
     const policePatterns = new Map<GamePhase, PhaseBehaviorPattern>();
-    
+
     policePatterns.set('day', {
       phase: 'day',
       behaviors: [
         {
           type: 'role_hint',
           probability: 0.3,
-          delayRange: [15000, 30000]
+          delayRange: [15000, 30000],
         },
         {
           type: 'cast_suspicion',
           probability: 0.6,
-          delayRange: [10000, 20000]
-        }
+          delayRange: [10000, 20000],
+        },
       ],
-      priority: 1
+      priority: 1,
     });
 
     this.rolePhaseConfigs.set('police', policePatterns);
 
     // 의사 역할 행동 패턴
     const doctorPatterns = new Map<GamePhase, PhaseBehaviorPattern>();
-    
+
     doctorPatterns.set('day', {
       phase: 'day',
       behaviors: [
         {
           type: 'silence_strategy',
           probability: 0.5,
-          delayRange: [20000, 40000]
+          delayRange: [20000, 40000],
         },
         {
           type: 'defend_player',
           probability: 0.4,
-          delayRange: [12000, 25000]
-        }
+          delayRange: [12000, 25000],
+        },
       ],
-      priority: 1
+      priority: 1,
     });
 
     this.rolePhaseConfigs.set('doctor', doctorPatterns);
@@ -458,10 +501,10 @@ export class PhaseBehaviorService {
         {
           type: 'initiate_discussion',
           probability: 0.8,
-          delayRange: [3000, 8000]
-        }
+          delayRange: [3000, 8000],
+        },
       ],
-      triggerDelay: 2000
+      triggerDelay: 2000,
     });
 
     // 낮 -> 투표 전환
@@ -472,10 +515,10 @@ export class PhaseBehaviorService {
         {
           type: 'vote_explanation',
           probability: 0.6,
-          delayRange: [1000, 5000]
-        }
+          delayRange: [1000, 5000],
+        },
       ],
-      triggerDelay: 1000
+      triggerDelay: 1000,
     });
   }
 
@@ -484,20 +527,26 @@ export class PhaseBehaviorService {
     const playerEliminatedResponse: SituationResponse = {
       situation: 'player_eliminated',
       roleResponses: new Map([
-        ['mafia', [
-          {
-            type: 'misdirection',
-            probability: 0.8,
-            delayRange: [5000, 12000]
-          }
-        ]],
-        ['citizen', [
-          {
-            type: 'share_information',
-            probability: 0.6,
-            delayRange: [3000, 10000]
-          }
-        ]]
+        [
+          'mafia',
+          [
+            {
+              type: 'misdirection',
+              probability: 0.8,
+              delayRange: [5000, 12000],
+            },
+          ],
+        ],
+        [
+          'citizen',
+          [
+            {
+              type: 'share_information',
+              probability: 0.6,
+              delayRange: [3000, 10000],
+            },
+          ],
+        ],
       ]),
       personalityModifiers: [
         {
@@ -505,10 +554,10 @@ export class PhaseBehaviorService {
           threshold: 0.7,
           modifier: {
             probabilityMultiplier: 1.3,
-            delayMultiplier: 0.7
-          }
-        }
-      ]
+            delayMultiplier: 0.7,
+          },
+        },
+      ],
     };
 
     this.situationResponses.set('player_eliminated', playerEliminatedResponse);
