@@ -7,7 +7,9 @@ export class LlmController {
   constructor(private readonly llmService: LlmService) {}
 
   @Post('generate')
-  async generate(@Body() body: GenerateRequestDto): Promise<{ result: string }> {
+  async generate(
+    @Body() body: GenerateRequestDto,
+  ): Promise<{ result: string }> {
     const result = await this.llmService.generate(body);
     return { result };
   }
