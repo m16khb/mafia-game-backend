@@ -4,7 +4,7 @@ import {
   ValidationError,
   ConflictError,
 } from '@libs/errors/domain-error';
-import { Game } from '../../entities/game.entity';
+import { Game, AIDifficultyLevel } from '../../entities/game.entity';
 import { Message } from '../../entities/message.entity';
 import {
   IGameRepository,
@@ -118,13 +118,16 @@ export class GameService {
     await this.playerRepository.save(createdAiPlayers);
 
     // AI 플레이어들에게 페르소나 할당
-    const personaAssignments = this.aiPersonaService.assignRandomPersonas(createdAiPlayers);
-    
+    const personaAssignments =
+      this.aiPersonaService.assignRandomPersonas(createdAiPlayers);
+
     // 페르소나 정보를 데이터베이스에 저장
     for (const aiPlayer of createdAiPlayers) {
       const persona = personaAssignments.get(aiPlayer.id);
       if (persona) {
-        aiPlayer.assignAiPersona(persona.id);
+        // Convert string ID to number for compatibility with entity
+        const numericId = this.mapStringPersonaIdToNumber(persona.id);
+        aiPlayer.assignAiPersona(numericId);
       }
     }
 
@@ -428,5 +431,273 @@ export class GameService {
       )
       .join('\n');
     return gameHistory;
+  }
+
+  // T053: AI 게임 관리 메서드들
+  async createAIGame(
+    hostName: string,
+    hostSocketId: string,
+    aiPlayerCount: number = 5,
+    aiDifficultyLevel: AIDifficultyLevel = 'medium',
+    aiPersonalitySet: string = 'default',
+  ): Promise<{ gameId: number; game: Game }> {
+    this.logger.log(`Creating AI game with ${aiPlayerCount} AI players`);
+
+    // AI 게임 생성
+    const game = this.gameRepository.create({
+      name: `${hostName}의 AI 게임`,
+      status: 'waiting',
+      currentPhase: 'day_discussion',
+      dayCount: 1,
+      remainingTime: 0,
+      maxPlayers: aiPlayerCount + 1,
+      minPlayers: aiPlayerCount + 1,
+      allowAI: true,
+      aiPlayerCount,
+      aiDifficultyLevel,
+      aiPersonalitySet,
+      aiDecisionsComplete: false,
+    });
+
+    const savedGame = await this.gameRepository.save(game);
+
+    // 게임 생성 이벤트 로그
+    await this.eventLogQueueService.addEventLogJob(
+      savedGame.id,
+      'ai-game-created',
+      {
+        hostName,
+        aiPlayerCount,
+        aiDifficultyLevel,
+        aiPersonalitySet,
+      },
+    );
+
+    // 인간 플레이어 생성
+    const hostPlayer = this.playerRepository.create({
+      name: hostName,
+      socketId: hostSocketId,
+      gameId: savedGame.id,
+      isHost: true,
+      isAlive: true,
+      isReady: false,
+      isAi: false,
+      role: null,
+    });
+
+    await this.playerRepository.save(hostPlayer);
+
+    // AI 플레이어들 생성
+    const aiPlayers = await this.createAIPlayers(savedGame, aiPlayerCount);
+
+    // 게임에 플레이어들 추가
+    savedGame.players = [hostPlayer, ...aiPlayers];
+    const finalGame = await this.gameRepository.save(savedGame);
+
+    return { gameId: savedGame.id, game: finalGame };
+  }
+
+  async startAIGame(gameId: number, humanPlayerId: number): Promise<Game> {
+    this.logger.log(`Starting AI game: ${gameId}`);
+
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
+
+    if (!game) {
+      throw new NotFoundError('Game', { id: gameId });
+    }
+
+    if (!game.isAIGame()) {
+      throw new ValidationError('Not an AI game');
+    }
+
+    if (!game.canStartAIGame()) {
+      throw new ConflictError('Cannot start AI game in current state');
+    }
+
+    // 역할 배정 및 게임 시작
+    game.startAIGame();
+
+    // 모든 플레이어의 역할 저장
+    for (const player of game.players) {
+      await this.playerRepository.save(player);
+    }
+
+    await this.gameRepository.save(game);
+
+    // AI 게임 시작 이벤트 로그
+    await this.eventLogQueueService.addEventLogJob(gameId, 'ai-game-started', {
+      playerCount: game.players.length,
+      aiPlayerCount: game.aiPlayerCount,
+      roles: game.players.map((p) => ({
+        name: p.name,
+        role: p.role,
+        isAi: p.isAi,
+      })),
+    });
+
+    this.eventEmitter.emit('ai-game.started', {
+      roomName: `game-${gameId}`,
+      gameId,
+      humanPlayerId,
+    });
+
+    return this.getGame(gameId);
+  }
+
+  async processAIPhase(gameId: number, phase: string): Promise<void> {
+    this.logger.log(`Processing AI phase: ${phase} for game ${gameId}`);
+
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
+
+    if (!game || !game.isAIGame()) {
+      throw new NotFoundError('AI Game', { id: gameId });
+    }
+
+    // AI 결정 처리 완료 표시
+    game.aiDecisionsComplete = true;
+    await this.gameRepository.save(game);
+
+    // AI 페이즈 완료 이벤트 로그
+    await this.eventLogQueueService.addEventLogJob(
+      gameId,
+      'ai-phase-completed',
+      {
+        phase,
+        aiPlayerCount: game.players.filter((p) => p.isAi && p.isAlive).length,
+      },
+    );
+
+    this.eventEmitter.emit('ai-phase.completed', {
+      roomName: `game-${gameId}`,
+      gameId,
+      phase,
+    });
+  }
+
+  async transitionAIGamePhase(gameId: number): Promise<Game> {
+    this.logger.log(`Transitioning AI game phase: ${gameId}`);
+
+    const game = await this.gameRepository.findByIdWithRelations(gameId, {
+      players: true,
+    });
+
+    if (!game || !game.isAIGame()) {
+      throw new NotFoundError('AI Game', { id: gameId });
+    }
+
+    // 게임 종료 확인
+    const gameOverResult = game.isGameOver();
+    if (gameOverResult.isOver) {
+      game.winner = gameOverResult.winner;
+      game.finish();
+
+      await this.eventLogQueueService.addEventLogJob(
+        gameId,
+        'ai-game-finished',
+        {
+          winner: gameOverResult.winner,
+          finalPhase: game.currentPhase,
+          totalDays: game.dayCount,
+        },
+      );
+
+      await this.gameRepository.save(game);
+      return game;
+    }
+
+    // 다음 페이즈로 전환
+    const previousPhase = game.currentPhase;
+    game.nextAIPhase();
+    game.aiDecisionsComplete = false; // 새 페이즈에서는 AI 결정 초기화
+
+    await this.eventLogQueueService.addEventLogJob(
+      gameId,
+      'ai-phase-transition',
+      {
+        previousPhase,
+        newPhase: game.currentPhase,
+        dayCount: game.dayCount,
+      },
+    );
+
+    await this.gameRepository.save(game);
+
+    this.eventEmitter.emit('ai-phase.transition', {
+      roomName: `game-${gameId}`,
+      gameId,
+      newPhase: game.currentPhase,
+      dayCount: game.dayCount,
+    });
+
+    return game;
+  }
+
+  private async createAIPlayers(game: Game, count: number): Promise<Player[]> {
+    const aiPlayers: Player[] = [];
+
+    for (let i = 1; i <= count; i++) {
+      const aiPlayer = this.playerRepository.create({
+        name: `AI Player ${i}`,
+        socketId: `ai_${game.id}_${i}`,
+        gameId: game.id,
+        isHost: false,
+        isAlive: true,
+        isReady: true,
+        isAi: true,
+        role: null,
+        aiPersonaId: null,
+        aiDecisionTimeout: 30000,
+      });
+
+      const savedAiPlayer = await this.playerRepository.save(aiPlayer);
+      aiPlayers.push(savedAiPlayer);
+    }
+
+    // AI 페르소나 할당
+    const personaAssignments =
+      this.aiPersonaService.assignRandomPersonas(aiPlayers);
+
+    for (const aiPlayer of aiPlayers) {
+      const persona = personaAssignments.get(aiPlayer.id);
+      if (persona) {
+        const numericId = this.mapStringPersonaIdToNumber(persona.id);
+        aiPlayer.assignAiPersona(numericId);
+        aiPlayer.name = persona.name; // 페르소나 이름으로 변경
+      }
+    }
+
+    // 업데이트된 AI 플레이어 정보 저장
+    await this.playerRepository.save(aiPlayers);
+
+    // 이벤트 로그
+    for (const ai of aiPlayers) {
+      const persona = personaAssignments.get(ai.id);
+      await this.eventLogQueueService.addEventLogJob(
+        game.id,
+        'ai-player-created',
+        {
+          playerName: ai.name,
+          aiPersonaId: persona?.id,
+          aiPersonaName: persona?.name,
+        },
+      );
+    }
+
+    return aiPlayers;
+  }
+
+  private mapStringPersonaIdToNumber(stringId: string): number {
+    const idMap: Record<string, number> = {
+      'detective-holmes': 1,
+      'smooth-talker': 2,
+      'team-player': 3,
+      'lone-wolf': 4,
+      'wild-card': 5,
+    };
+    return idMap[stringId] || 1; // Default to 1 if not found
   }
 }

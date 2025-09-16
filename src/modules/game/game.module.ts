@@ -9,12 +9,16 @@ import { GameController } from './game.controller';
 import { GameService } from './game.service';
 import { GameGateway } from './game.gateway';
 import { GameRepository } from './game.repository';
+import { AIGameController } from './ai-game.controller';
+import { AIGameGateway } from './ai-game.gateway';
+import { AIManagementController } from './ai-management.controller';
+import { AIPerformanceController } from './ai-performance.controller';
 import { PlayerModule } from '../player/player.module';
 import { MessageModule } from '../message/message.module';
 import { GAME_REPOSITORY_TOKEN } from '@libs/repositories';
 import { LlmModule } from '../llm/llm.module';
 import { EventLogQueueService } from '../game-event/event-log-queue.service';
-import { AIModule } from '../ai/ai.module';
+import { AIModule } from '@libs/ai';
 
 @Module({
   imports: [
@@ -27,10 +31,16 @@ import { AIModule } from '../ai/ai.module';
     LlmModule,
     AIModule,
   ],
-  controllers: [GameController],
+  controllers: [
+    GameController,
+    AIGameController,
+    AIManagementController,
+    AIPerformanceController,
+  ],
   providers: [
     GameService,
     GameGateway,
+    AIGameGateway,
     GameRepository,
     EventLogQueueService,
     {
