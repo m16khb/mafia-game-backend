@@ -6,12 +6,17 @@ import { Game } from './entities/game.entity';
 import { GameEvent } from './entities/game-event.entity';
 import { Message } from './entities/message.entity';
 import { Player } from './entities/player.entity';
+import { AIPersona } from './entities/ai-persona.entity';
+import { AIDecision } from './entities/ai-decision.entity';
+import { PromptTemplate } from './entities/prompt-template.entity';
 import { GameModule } from './modules/game/game.module';
 import { PlayerModule } from './modules/player/player.module';
 import { MessageModule } from './modules/message/message.module';
 import { GameEventModule } from './modules/game-event/game-event.module';
 import { HealthModule } from './modules/health/health.module';
 import { RedisModule } from '@libs/redis/redis.module';
+import { AIModule } from '@libs/ai';
+import { LLMModule } from '@libs/llm';
 import { LlmModule } from './modules/llm/llm.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ClsModule } from 'nestjs-cls';
@@ -43,7 +48,15 @@ import { LoggerModule } from './libs/logger/logger.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [Game, Player, Message, GameEvent],
+        entities: [
+          Game,
+          Player,
+          Message,
+          GameEvent,
+          AIPersona,
+          AIDecision,
+          PromptTemplate,
+        ],
         synchronize: configService.get('NODE_ENV') !== 'prod',
         // logging: configService.get('NODE_ENV') !== 'prod',
       }),
@@ -66,6 +79,8 @@ import { LoggerModule } from './libs/logger/logger.module';
     GameEventModule,
     HealthModule,
     RedisModule,
+    AIModule,
+    LLMModule,
     LlmModule,
   ],
 })
