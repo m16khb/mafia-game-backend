@@ -110,3 +110,9 @@ CLAUDE.md
 
 # gemini
 GEMINI.md
+
+# specify
+.specify/
+.specify/*
+specs/
+specs/*
