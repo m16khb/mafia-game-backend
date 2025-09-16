@@ -19,10 +19,10 @@ describe('플레이어 엔티티', () => {
      * AI 플레이어에게 페르소나를 성공적으로 할당할 수 있는지 테스트합니다.
      */
     it('AI 플레이어에게 페르소나를 할당해야 함', () => {
-      const personaId = 'detective-holmes';
-      
+      const personaId = 1;
+
       player.assignAiPersona(personaId);
-      
+
       expect(player.aiPersonaId).toBe(personaId);
     });
 
@@ -32,9 +32,9 @@ describe('플레이어 엔티티', () => {
      */
     it('인간 플레이어에게 페르소나를 할당할 때 오류를 발생시켜야 함', () => {
       player.isAi = false;
-      
+
       expect(() => {
-        player.assignAiPersona('detective-holmes');
+        player.assignAiPersona(1);
       }).toThrow('Cannot assign persona to non-AI player');
     });
 
@@ -44,9 +44,9 @@ describe('플레이어 엔티티', () => {
      */
     it('AI 페르소나가 할당되었는지 확인해야 함', () => {
       expect(player.hasAiPersona()).toBe(false);
-      
-      player.assignAiPersona('detective-holmes');
-      
+
+      player.assignAiPersona(1);
+
       expect(player.hasAiPersona()).toBe(true);
     });
 
@@ -56,8 +56,8 @@ describe('플레이어 엔티티', () => {
      */
     it('인간 플레이어의 페르소나 확인에 대해 false를 반환해야 함', () => {
       player.isAi = false;
-      player.aiPersonaId = 'detective-holmes';
-      
+      player.aiPersonaId = 1;
+
       expect(player.hasAiPersona()).toBe(false);
     });
 
@@ -66,11 +66,11 @@ describe('플레이어 엔티티', () => {
      * 제거 후 상태가 올바르게 변경되는지 확인합니다.
      */
     it('AI 페르소나를 지워야 함', () => {
-      player.assignAiPersona('detective-holmes');
+      player.assignAiPersona(1);
       expect(player.hasAiPersona()).toBe(true);
-      
+
       player.clearAiPersona();
-      
+
       expect(player.hasAiPersona()).toBe(false);
       expect(player.aiPersonaId).toBeUndefined();
     });

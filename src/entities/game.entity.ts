@@ -12,8 +12,16 @@ import { Message } from './message.entity';
 import { GameEvent } from './game-event.entity';
 
 export type GameStatus = 'waiting' | 'playing' | 'finished';
-export type GamePhase = 'day' | 'night' | 'voting' | 'result';
+export type GamePhase =
+  | 'day'
+  | 'night'
+  | 'voting'
+  | 'result'
+  | 'day_discussion'
+  | 'day_voting'
+  | 'night_actions';
 export type GameRole = 'citizen' | 'mafia' | 'police' | 'doctor';
+export type AIDifficultyLevel = 'easy' | 'medium' | 'hard';
 
 @Entity('games')
 export class Game {
@@ -38,11 +46,27 @@ export class Game {
 
   @ApiProperty({
     description: '현재 게임 페이즈',
-    enum: ['day', 'night', 'voting', 'result'],
+    enum: [
+      'day',
+      'night',
+      'voting',
+      'result',
+      'day_discussion',
+      'day_voting',
+      'night_actions',
+    ],
   })
   @Column({
     type: 'enum',
-    enum: ['day', 'night', 'voting', 'result'],
+    enum: [
+      'day',
+      'night',
+      'voting',
+      'result',
+      'day_discussion',
+      'day_voting',
+      'night_actions',
+    ],
     default: 'day',
     nullable: true,
   })
@@ -75,6 +99,54 @@ export class Game {
   @ApiProperty({ description: '투표 시간 (초)', example: 120 })
   @Column({ type: 'int', default: 120 })
   voteTimeSeconds: number;
+
+  @ApiProperty({ description: 'AI 지원 여부', example: false })
+  @Column({ type: 'boolean', default: false })
+  allowAI: boolean;
+
+  @ApiProperty({ description: 'AI 플레이어 수', example: 5 })
+  @Column({ type: 'int', unsigned: true, default: 0 })
+  aiPlayerCount: number;
+
+  @ApiProperty({
+    description: 'AI 난이도 레벨',
+    enum: ['easy', 'medium', 'hard'],
+    required: false,
+  })
+  @Column({
+    type: 'enum',
+    enum: ['easy', 'medium', 'hard'],
+    nullable: true,
+  })
+  aiDifficultyLevel?: AIDifficultyLevel;
+
+  @ApiProperty({
+    description: 'AI 페르소나 세트',
+    required: false,
+    example: 'default',
+  })
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  aiPersonalitySet?: string;
+
+  @ApiProperty({ description: '페이즈 시작 시간', required: false })
+  @Column({ type: 'timestamp', nullable: true })
+  phaseStartTime?: Date;
+
+  @ApiProperty({
+    description: '페이즈 제한 시간 (초)',
+    required: false,
+    example: 180,
+  })
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  phaseTimeLimit?: number;
+
+  @ApiProperty({ description: 'AI 결정 완료 여부', example: false })
+  @Column({ type: 'boolean', default: false })
+  aiDecisionsComplete: boolean;
+
+  @ApiProperty({ description: 'AI 협력 상태 (JSON)', required: false })
+  @Column({ type: 'json', nullable: true })
+  aiCoordinationState?: any;
 
   @ApiProperty({ description: '게임 생성 시간' })
   @CreateDateColumn()
@@ -230,30 +302,138 @@ export class Game {
     return { isOver: false };
   }
 
-  private assignRoles(): void {
-    const playerCount = this.players.length;
-    const mafiaCount = Math.ceil(playerCount / 3);
-    const policeCount = Math.max(0, playerCount - mafiaCount);
-    const doctorCount = Math.max(0, playerCount - mafiaCount - policeCount);
+  // AI Game Methods
+  isAIGame(): boolean {
+    return this.allowAI && this.aiPlayerCount > 0;
+  }
 
-    const roles: GameRole[] = [
-      ...Array(mafiaCount).fill('mafia'),
-      ...Array(policeCount).fill('police'),
-      ...Array(doctorCount).fill('doctor'),
-      ...Array(
-        Math.max(0, playerCount - mafiaCount - policeCount - doctorCount),
-      ).fill('citizen'),
-    ];
+  getAIPlayers(): Player[] {
+    return this.players.filter((p) => p.isAi);
+  }
 
-    // 역할 섞기
-    for (let i = roles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [roles[i], roles[j]] = [roles[j], roles[i]];
+  getHumanPlayers(): Player[] {
+    return this.players.filter((p) => !p.isAi);
+  }
+
+  canStartAIGame(): boolean {
+    return (
+      this.status === 'waiting' &&
+      this.players.length === this.aiPlayerCount + 1 && // 5 AI + 1 human
+      this.getAIPlayers().every((p) => p.hasAiPersona()) &&
+      this.getHumanPlayers().every((p) => p.isReady)
+    );
+  }
+
+  startAIGame(): void {
+    if (!this.canStartAIGame()) {
+      throw new Error('Cannot start AI game: requirements not met');
     }
+    this.assignRoles();
+    this.status = 'playing';
+    this.currentPhase = 'day_discussion';
+    this.startedAt = new Date();
+    this.phaseStartTime = new Date();
+    this.phaseTimeLimit = 180; // 3 minutes for day discussion
+    this.aiDecisionsComplete = false;
+  }
 
-    // 플레이어에게 역할 배정
-    this.players.forEach((player, index) => {
-      player.assignRole(roles[index]);
-    });
+  nextAIPhase(): void {
+    switch (this.currentPhase) {
+      case 'day_discussion':
+        this.currentPhase = 'day_voting';
+        this.phaseTimeLimit = 120; // 2 minutes for voting
+        break;
+      case 'day_voting':
+        this.currentPhase = 'night_actions';
+        this.phaseTimeLimit = 60; // 1 minute for night actions
+        break;
+      case 'night_actions':
+        this.dayCount++;
+        this.currentPhase = 'day_discussion';
+        this.phaseTimeLimit = 180; // 3 minutes for day discussion
+        break;
+    }
+    this.phaseStartTime = new Date();
+    this.aiDecisionsComplete = false;
+  }
+
+  markAIDecisionsComplete(): void {
+    this.aiDecisionsComplete = true;
+  }
+
+  areAIDecisionsPending(): boolean {
+    return !this.aiDecisionsComplete;
+  }
+
+  getPhaseRemainingTime(): number {
+    if (!this.phaseStartTime || !this.phaseTimeLimit) {
+      return 0;
+    }
+    const elapsed = (Date.now() - this.phaseStartTime.getTime()) / 1000;
+    return Math.max(0, this.phaseTimeLimit - elapsed);
+  }
+
+  isPhaseExpired(): boolean {
+    return this.getPhaseRemainingTime() <= 0;
+  }
+
+  setAICoordinationState(state: any): void {
+    this.aiCoordinationState = state;
+  }
+
+  getAICoordinationState(): any {
+    return this.aiCoordinationState || {};
+  }
+
+  assignRoles(): void {
+    const playerCount = this.players.length;
+
+    // For AI games, use specific role distribution for 6 players
+    if (this.isAIGame() && playerCount === 6) {
+      const roles: GameRole[] = [
+        'mafia',
+        'mafia',
+        'police',
+        'doctor',
+        'citizen',
+        'citizen',
+      ];
+
+      // 역할 섞기
+      for (let i = roles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [roles[i], roles[j]] = [roles[j], roles[i]];
+      }
+
+      // 플레이어에게 역할 배정
+      this.players.forEach((player, index) => {
+        player.assignRole(roles[index]);
+      });
+    } else {
+      // Original role assignment logic for regular games
+      const mafiaCount = Math.ceil(playerCount / 3);
+      const policeCount = Math.max(0, playerCount - mafiaCount);
+      const doctorCount = Math.max(0, playerCount - mafiaCount - policeCount);
+
+      const roles: GameRole[] = [
+        ...Array(mafiaCount).fill('mafia'),
+        ...Array(policeCount).fill('police'),
+        ...Array(doctorCount).fill('doctor'),
+        ...Array(
+          Math.max(0, playerCount - mafiaCount - policeCount - doctorCount),
+        ).fill('citizen'),
+      ];
+
+      // 역할 섞기
+      for (let i = roles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [roles[i], roles[j]] = [roles[j], roles[i]];
+      }
+
+      // 플레이어에게 역할 배정
+      this.players.forEach((player, index) => {
+        player.assignRole(roles[index]);
+      });
+    }
   }
 }

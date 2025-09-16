@@ -39,9 +39,37 @@ export class Player {
   @Column({ type: 'boolean', default: false })
   isAi: boolean;
 
-  @ApiProperty({ description: 'AI 페르소나 ID', required: false, example: 'detective-holmes' })
+  @ApiProperty({ description: 'AI 페르소나 ID', required: false, example: 1 })
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  aiPersonaId?: number;
+
+  @ApiProperty({
+    description: 'AI 결정 타임아웃 (ms)',
+    required: false,
+    example: 30000,
+  })
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  aiDecisionTimeout?: number;
+
+  @ApiProperty({
+    description: '현재 AI 전략',
+    required: false,
+    example: 'mafia_coordination',
+  })
   @Column({ type: 'varchar', length: 100, nullable: true })
-  aiPersonaId?: string;
+  currentStrategy?: string;
+
+  @ApiProperty({ description: '마지막 결정 시간', required: false })
+  @Column({ type: 'timestamp', nullable: true })
+  lastDecisionTime?: Date;
+
+  @ApiProperty({
+    description: '평균 응답 시간 (ms)',
+    required: false,
+    example: 450,
+  })
+  @Column({ type: 'int', unsigned: true, nullable: true })
+  responseTime?: number;
 
   @ApiProperty({
     description: '플레이어 역할',
@@ -108,11 +136,14 @@ export class Player {
   /**
    * AI 페르소나 ID를 설정합니다.
    */
-  assignAiPersona(personaId: string): void {
+  assignAiPersona(personaId: number, strategy?: string): void {
     if (!this.isAi) {
       throw new Error('Cannot assign persona to non-AI player');
     }
     this.aiPersonaId = personaId;
+    if (strategy) {
+      this.currentStrategy = strategy;
+    }
   }
 
   /**
@@ -127,5 +158,54 @@ export class Player {
    */
   clearAiPersona(): void {
     this.aiPersonaId = undefined;
+    this.currentStrategy = undefined;
+  }
+
+  /**
+   * AI 결정 시간을 기록합니다.
+   */
+  recordDecisionTime(decisionTimeMs: number): void {
+    if (!this.isAi) {
+      throw new Error('Cannot record decision time for non-AI player');
+    }
+
+    this.lastDecisionTime = new Date();
+
+    // Calculate running average response time
+    if (this.responseTime === null || this.responseTime === undefined) {
+      this.responseTime = decisionTimeMs;
+    } else {
+      // Simple exponential moving average (factor of 0.3)
+      this.responseTime = Math.round(
+        this.responseTime * 0.7 + decisionTimeMs * 0.3,
+      );
+    }
+  }
+
+  /**
+   * AI 전략을 업데이트합니다.
+   */
+  updateStrategy(strategy: string): void {
+    if (!this.isAi) {
+      throw new Error('Cannot update strategy for non-AI player');
+    }
+    this.currentStrategy = strategy;
+  }
+
+  /**
+   * AI 결정 타임아웃을 설정합니다.
+   */
+  setDecisionTimeout(timeoutMs: number): void {
+    if (!this.isAi) {
+      throw new Error('Cannot set decision timeout for non-AI player');
+    }
+    this.aiDecisionTimeout = timeoutMs;
+  }
+
+  /**
+   * AI 플레이어의 결정 타임아웃을 가져옵니다. (기본값 30초)
+   */
+  getDecisionTimeout(): number {
+    return this.aiDecisionTimeout || 30000;
   }
 }
