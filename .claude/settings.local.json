@@ -79,7 +79,8 @@
       "Bash",
       "Read(/C:\\Users\\m16kh\\IdeaProjects\\mafia-game-backend/**)",
       "Read(/C:\\Users\\m16kh\\IdeaProjects\\mafia-game-backend\\src\\common\\dtos/**)",
-      "Read(/C:\\Users\\m16kh\\IdeaProjects\\mafia-game-backend\\src\\common\\dtos/**)"
+      "Read(/C:\\Users\\m16kh\\IdeaProjects\\mafia-game-backend\\src\\common\\dtos/**)",
+      "WebSearch"
     ],
     "deny": [
       "Bash(rm -rf:*)",

@@ -86,6 +86,15 @@ src/
 │   │   ├── redis-io.adapter.ts
 │   │   ├── redis.module.ts
 │   │   └── index.ts
+│   ├── ai/                # AI player management (NEW - feature/001-ai-5)
+│   │   ├── ai.service.ts
+│   │   ├── ai.module.ts
+│   │   ├── personas/      # AI personality definitions
+│   │   └── strategies/    # Role-specific AI strategies
+│   ├── llm/               # LLM integration (NEW - feature/001-ai-5)
+│   │   ├── llm.service.ts
+│   │   ├── llm.module.ts
+│   │   └── prompts/       # Prompt templates
 │   ├── errors/            # Custom error classes
 │   ├── filters/           # Exception filters
 │   ├── interceptors/      # Request/response interceptors
@@ -105,6 +114,7 @@ src/
 - **Documentation**: Swagger/OpenAPI at `/api/docs`
 - **Monitoring**: Bull Board dashboard at `/admin/queues`
 - **Testing**: Jest with SuperTest for e2e tests
+- **AI Integration**: OpenRouter API for LLM services (feature/5-feature-create-llmservice)
 
 ## Business Logic Patterns
 
@@ -282,6 +292,16 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 FRONTEND_URL=http://localhost:3000
 NODE_ENV=development
+
+# AI Integration (feature/001-ai-5)
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_MODEL_ROUTINE=anthropic/claude-3-haiku
+OPENROUTER_MODEL_STRATEGY=openai/gpt-4-turbo
+OPENROUTER_DAILY_LIMIT=10.00
+AI_DECISION_TIMEOUT=30000
+AI_CONCURRENT_LIMIT=5
+AI_CACHE_TTL=30
+AI_DEFAULT_PERSONALITY_SET=default
 ```
 
 ## TypeScript Architecture
